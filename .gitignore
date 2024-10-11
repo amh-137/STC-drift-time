@@ -1,5 +1,7 @@
 data/*
 
+
 # Output files
+*.o
 STC
 a.out

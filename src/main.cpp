@@ -7,11 +7,14 @@
 #include <fstream>
 #include <vector>
 
+// include ROOT
+#include <TTree.h>
+
 int read_file(std::string fname, std::vector<double>& data); // returns 0 if success
 
+
+// print a vector of any type
 template <typename T>
-
-
 void vprint(std::vector<T> v) {
     for (size_t i = 0; i < v.size(); i++) {
         std::cout << v[i] << " ";
@@ -35,13 +38,13 @@ int main(){
 }
 
 
+
+
 int read_file(std::string fname, std::vector<double>& data) {
-    // check that file exists
-
-
     // open file
     std::ifstream inp(fname, std::ios::binary);
 
+    // if file doesnt exit / wrong path : return 1
     if (!inp) {
         std::cerr << "Failed to open file: " << fname << std::endl;
         return 1;
