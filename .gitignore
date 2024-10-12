@@ -1,7 +1,11 @@
 data/*
 
+# Unfortunately I like VSCode (and VIM!)
+.vscode/settings.json
+
 
 # Output files
 *.o
 STC
 a.out
+

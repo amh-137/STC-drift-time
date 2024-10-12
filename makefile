@@ -9,7 +9,7 @@ CXXFLAGS = -std=c++17 -Wall `root-config --cflags`
 LDFLAGS = `root-config --libs`
 
 # sources
-SRCS = src/main.cpp
+SRCS = src/main.cpp src/event.h src/event.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
