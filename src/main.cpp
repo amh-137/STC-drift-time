@@ -6,7 +6,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <TTree.h> // include ROOT
+//#include <TTree.h> // include ROOT
 
 #include "event.h"
 
@@ -41,8 +41,13 @@ int main(){
 
     // read the first event
     event ev;
-    read_event(file, 0, ev);
     ev.print();
+    read_event(file, 0, ev);
+    file.close();
+    std::cout<<"Hi"<<std::endl;
+    ev.print();
+    
+
 
 
     return 0;
@@ -72,6 +77,8 @@ void read_event(std::ifstream &inp, int line, event &ev) {
     inp.seekg(line * 16); // go to the line
     inp.read(buffer, 16);
     ev = event(buffer);
+    std::cout << "Event read" << std::endl;
+    return;
 }
 
 

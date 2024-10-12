@@ -29,4 +29,4 @@ $(TARGET): $(OBJS)
 
 # Clean up build files
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f src/*.o $(TARGET)
