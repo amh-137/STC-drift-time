@@ -1,5 +1,7 @@
+# Makefile for the STC project
+# Alex Hergenhan 2024
 
-# Flags etc
+
 CXX = g++
 
 # Compiler flags
@@ -8,10 +10,8 @@ CXXFLAGS = -std=c++17 -Wall `root-config --cflags`
 # Linker flags
 LDFLAGS = `root-config --libs`
 
-# sources
 SRCS = src/main.cpp src/event.h src/event.cpp
 
-# Object files
 OBJS = $(SRCS:.cpp=.o)
 
 

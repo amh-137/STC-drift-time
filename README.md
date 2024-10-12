@@ -5,7 +5,7 @@ Read STC.pdf for details.
 ## Build C++
 ```make```
 or
-```g++ main.cpp -o STC
+``` g++ ... ```
 
 ## Build LaTeX
 

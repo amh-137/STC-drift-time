@@ -1,6 +1,6 @@
 data/*
 
-# Unfortunately I like VSCode (and VIM!)
+# Unfortunately I like VSCode (but also VIM!)
 .vscode/settings.json
 
 
@@ -9,3 +9,6 @@ data/*
 STC
 a.out
 
+
+# TeX pdf - ignore for now, REMOVE FROM GITIGNORE LATER
+STC.pdf
