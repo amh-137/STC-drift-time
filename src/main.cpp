@@ -32,7 +32,7 @@ void vprint(std::vector<T> v) {
 
 
 int main(){
-
+    
     std::ifstream file;
     int stat = open_file("data/onetrack.raw", file);
     if (stat != 0){
@@ -41,13 +41,14 @@ int main(){
 
     // read the first event
     event ev;
-    ev.print();
     read_event(file, 0, ev);
-    file.close();
-    std::cout<<"Hi"<<std::endl;
+
     ev.print();
     
 
+    file.close();
+
+    std::cout<<"File closed"<<std::endl;
 
 
     return 0;
@@ -101,7 +102,7 @@ int read_file(std::string fname, std::vector<double>& data) {
         return 1;
     }
 
-
+    std::cout<<"\n!!";
     // Get the size of the file
     inp.seekg(0, std::ios::end);
     std::streamsize size = inp.tellg();
@@ -110,8 +111,13 @@ int read_file(std::string fname, std::vector<double>& data) {
     // Create a buffer to hold the data
     std::vector<char> buffer(size);
 
+    std::cout<<"\n!!";
+
     // Read the file
     inp.read(buffer.data(), size);
+
+    std::cout<<"\n!!";
+
 
     // print it for now
     for (size_t i = 0; i < buffer.size(); i++) {
@@ -119,8 +125,11 @@ int read_file(std::string fname, std::vector<double>& data) {
             data.push_back(static_cast<double>(buffer[i]));
         }
         //std::cout << std::endl;
+    
+    std::cout<<"\n!!";
 
     inp.close();
+
 
     return 0;
 }
