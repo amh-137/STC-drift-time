@@ -9,6 +9,7 @@ data/*
 STC
 a.out
 
+plots/
 
 # TeX pdf - ignore for now, REMOVE FROM GITIGNORE LATER
 STC.pdf

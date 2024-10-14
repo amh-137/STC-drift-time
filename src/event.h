@@ -34,6 +34,9 @@ public:
     event(char (&buffer)[16]);
 
     void print() const;
+
+    // overload [] to allow access to hits
+    hit& operator[](int i) { return hits[i]; } // do i need const on this?
     
     // instead of having a print line function, I will overload the << operator to show off
     friend std::ostream& operator<<(std::ostream& os, const event& ev);

@@ -7,6 +7,9 @@
 #include <fstream>
 #include <vector>
 //#include <TTree.h> // include ROOT
+#include <TGraph.h>
+#include <TApplication.h>
+#include <TCanvas.h>
 
 #include "event.h"
 
@@ -26,8 +29,48 @@ void vprint(std::vector<T> v) {
     std::cout << std::endl;
 }
 
+void conv_hit_to_coords(hit h, double &x, double &y){
+    // bottom left @ (1,1)
+    x = h.layer + 1;
+    y = h.wire + 1;
+    if (h.layer % 2 == 1){
+        y += 0.5;
+    }
+}
+
+void event_img(event ev){
+    TGraph g;
+    g.SetTitle("Event;x (cm);y (cm)");
+
+    // bottom left @ (1,1)
+    for (int i=0; i<8; i++){
+        for (int j=0; j<8; j++){
+            // if its an even row, plot normally
+            if (i%2 == 0){
+                g.AddPoint(i+1, j+1);
+            }
+            else {
+                g.AddPoint(i+1, j+1.5);
+            }
+        }
+    }
+
+    TGraph g2;
+
+    for (int i=0; i<8; i++){
+        double x, y;
+        conv_hit_to_coords(ev[i], x, y);
+        g2.AddPoint(x, y);
+    }
+
+    g2.SetMarkerColor(kRed); // Marker color red
 
 
+    TCanvas c("canvas", "Event Display", 800, 800);
+    g.Draw("AP*");
+    g2.Draw("P* same");
+    c.SaveAs("plots/event.png");
+}
 
 
 
@@ -44,6 +87,8 @@ int main(){
     read_event(file, 0, ev);
 
     ev.print();
+
+    event_img(ev);
     
 
     file.close();

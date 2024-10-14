@@ -20,9 +20,9 @@ event::event(){
 
 
 event::event(char (&buffer)[16]){
-
-    std::cout<< "int: "<<sizeof(int) << " char: " << sizeof(char) << " uint16: " << sizeof(uint16_t) << std::endl;
-
+    // sizeof(char) = 1
+    // sizeof(uint16_t) = 2
+    
     // loop through the buffer and create hits
     hit new_hit;
     for (int i = 0, j=0; i < 16; i+=2, j++){
@@ -40,9 +40,6 @@ event::event(char (&buffer)[16]){
         // final 10 bits is TDC
         new_hit.TDC = (line & 0b1111111111000000) >> 6;
 
-        std::cout<<"Layer: "<<new_hit.layer<<" Wire: "<<new_hit.wire<<" TDC: "<<new_hit.TDC<<std::endl << std::endl;
-
-
         //std::cout << "Layer: " << new_hit.layer << ", Wire: " << new_hit.wire << ", TDC: " << new_hit.TDC << std::endl;
         hits[j] = new_hit;
     }
@@ -55,10 +52,11 @@ event::event(char (&buffer)[16]){
 
 void event::print() const {
     for (int i = 0; i < 8; i++){
-        std::cout << "Hit " << i << ": Layer " << hits[i].layer << ", Wire " << hits[i].wire << ", TDC " << hits[i].TDC << std::endl;
-    }
+        std::cout << "Hit " << i << ": Layer " << hits[i].layer << ", Wire " << hits[i].wire;
+        std::cout << ", TDC " << hits[i].TDC << " (raw) -> " << hits[i].TDC / 2;
+        std::cout << " to " << (static_cast<double>(hits[i].TDC) + 1.) / 2. << " bin (ns)."<< std::endl;
+    }   
 }
-
 
 
 
