@@ -74,6 +74,7 @@ int open_file(std::string fname, std::ifstream& inp) {
 
 
 void read_event(std::ifstream &inp, int line, event &ev) {
+    // unfortunately cannot read in directly to 16 bit types like int16_t
     char buffer[16];
     inp.seekg(line * 16); // go to the line
     inp.read(buffer, 16);
