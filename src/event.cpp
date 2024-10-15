@@ -27,9 +27,9 @@ event::event(char (&buffer)[16]){
     hit new_hit;
     for (int i = 0, j=0; i < 16; i+=2, j++){
         // use a uint16_t to store the 2 bytes of data!
-        uint16_t line { static_cast<uint16_t>( (static_cast<uint16_t>(buffer[i]) << 8) | (static_cast<uint16_t>(buffer[i+1])) ) };
-        //std::cout<<std::bitset<8>(buffer[i])<<" "<<std::bitset<8>(buffer[i+1])<<std::endl;
-        //std::cout<<std::bitset<16>(line)<<std::endl;
+        uint16_t line { static_cast<uint16_t>( (static_cast<uint16_t>(buffer[i+1]) << 8) | (static_cast<uint16_t>(buffer[i])) ) };
+        std::cout<<std::bitset<8>(buffer[i])<<" "<<std::bitset<8>(buffer[i+1])<<std::endl;
+        std::cout<<std::bitset<16>(line)<<std::endl;
 
         // first three bits is line
         new_hit.layer = line & 0b111;
