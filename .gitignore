@@ -3,6 +3,7 @@ data/*
 
 # test files
 test.cpp
+venv/
 
 # Unfortunately I like VSCode (but also VIM!)
 .vscode/settings.json

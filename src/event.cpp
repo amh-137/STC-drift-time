@@ -92,13 +92,17 @@ event::event(char (&buffer)[16]){
         // to avoid the sign bit being set to 1
         unsigned char uch1 { static_cast<unsigned char>(buffer[i]) };
         unsigned char uch2 { static_cast<unsigned char>(buffer[i+1]) };
+        // I think you can get around this with std::bit_cast in C++20
+        // or memcpy
+        // https://stackoverflow.com/questions/332030/when-should-static-cast-dynamic-cast-const-cast-and-reinterpret-cast-be-used
 
-        std::cout<<std::bitset<8>(uch1)<<" "<<std::bitset<8>(uch2)<<std::endl;
+
+        //std::cout<<std::bitset<8>(uch1)<<" "<<std::bitset<8>(uch2)<<std::endl;
         
         uint16_t rh = static_cast<uint16_t>(uch1);
         uint16_t lh = static_cast<uint16_t>(uch2) << 8;
         uint16_t line = rh | lh;
-        std::cout<<std::bitset<16>(line)<<std::endl;
+        //std::cout<<std::bitset<16>(line)<<std::endl;
 
         // first three bits is line
         new_hit.layer = line & 0b111;
@@ -112,10 +116,6 @@ event::event(char (&buffer)[16]){
         //std::cout << "Layer: " << new_hit.layer << ", Wire: " << new_hit.wire << ", TDC: " << new_hit.TDC << std::endl;
         hits[j] = new_hit;
     }
-    /*
-    for (int i = 0; i < 8; i++){
-        std::cout << "Hit " << i << ": Layer " << hits[i].layer << ", Wire " << hits[i].wire << ", TDC " << hits[i].TDC << std::endl;
-    }*/
 }
 
 void event::print() const {
