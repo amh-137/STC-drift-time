@@ -1,4 +1,8 @@
+# gitignore
 data/*
+
+# test files
+test.cpp
 
 # Unfortunately I like VSCode (but also VIM!)
 .vscode/settings.json

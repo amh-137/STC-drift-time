@@ -9,19 +9,11 @@
 #include <iostream>
 #include <cstdint> // for uint16_t
 
-struct hit{
-    /*
-    int layer; // lowest order 3 bits of a 16 bit datum
-    int wire; // wire number within the layer, next 3 bits
-    int TDC; // final 10 bits
-    */
-    
-    uint16_t layer; // lowest order 3 bits of a 16 bit datum
-    uint16_t wire; // wire number within the layer, next 3 bits
-    uint16_t TDC; // final 10 bits
-    
-};
+#include <TCanvas.h>
 
+#include "hit.h"
+#include "line.h"
+#include "circle.h"
 
 class event {
 private:
@@ -41,7 +33,13 @@ public:
     // instead of having a print line function, I will overload the << operator to show off
     friend std::ostream& operator<<(std::ostream& os, const event& ev);
 
+
+    void geometry(std::vector<line>& lvec) const;
+
 };
+
+
+void conv_hit_to_coords(hit h, double &x, double &y);
 
 #endif // EVENT_H
 // end event.h

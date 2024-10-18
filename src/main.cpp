@@ -8,10 +8,10 @@
 #include <vector>
 //#include <TTree.h> // include ROOT
 #include <TGraph.h>
-#include <TApplication.h>
 #include <TCanvas.h>
 
 #include "event.h"
+#include "hit.h"
 
 int read_file(std::string fname, std::vector<double>& data); // returns 0 if success
 
@@ -29,16 +29,14 @@ void vprint(std::vector<T> v) {
     std::cout << std::endl;
 }
 
-void conv_hit_to_coords(hit h, double &x, double &y){
-    // bottom left @ (1,1)
-    x = h.layer + 1;
-    y = h.wire + 1;
-    if (h.layer % 2 == 1){
-        y += 0.5;
-    }
-}
 
+#include <TEllipse.h>
 void event_img(event ev){
+
+    TCanvas c("canvas", "Event Display", 800, 800);
+    
+
+    c.cd();
     TGraph g;
     g.SetTitle("Event;x (cm);y (cm)");
 
@@ -65,10 +63,41 @@ void event_img(event ev){
 
     g2.SetMarkerColor(kRed); // Marker color red
 
-
-    TCanvas c("canvas", "Event Display", 800, 800);
     g.Draw("AP*");
     g2.Draw("P* same");
+
+
+    // get the lines
+    std::vector<line> lvec;
+    ev.geometry(lvec);
+
+    for (int i=0; i<7; i++){
+
+        double x0, y0, x1, y1;
+        conv_hit_to_coords(ev[i], x0, y0);
+        conv_hit_to_coords(ev[i+1], x1, y1);
+        double f1, f2;
+
+        for (int j=0; j<4; j++){
+            line l = lvec[i*4 + j];
+            // plot between x0-1 to x1+1
+            // two points define a straight line!
+            f1 = l.m * (x0-1.) + l.c;
+            f2 = l.m * (x1+1.) + l.c;
+            std::cout<<"x0 "<<x0<<" f0 "<<f1<<" x1 "<<x1<<" f2 "<<f1<<std::endl;
+            double x[2] = {x0-1., x1+1.};
+            double y[2] = {f1, f2};
+            TGraph* g3 = new TGraph(2, x, y);
+            g3->Draw("L same");
+        }
+
+        // draw the circles
+        double r1 = ev[i].TDC / 2000.;
+        TEllipse* e1 = new TEllipse(x0, y0, r1, r1);
+        e1->SetFillStyle(0);
+        e1->Draw("same");
+    }
+
     c.SaveAs("plots/event.png");
 }
 
