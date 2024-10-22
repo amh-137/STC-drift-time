@@ -33,8 +33,18 @@ public:
     // instead of having a print line function, I will overload the << operator to show off
     friend std::ostream& operator<<(std::ostream& os, const event& ev);
 
+    void get_two_largest_circles(int& i, int& j) const;
 
-    void geometry(std::vector<line>& lvec) const;
+    /** @brief
+     *  function to be minimised
+     * @param v: velocity of particle
+     * @param n_tangent: number of tangent line (0-3)
+     * @param n_c1: number of largest circle (0-7)
+     * @param n_c2: number of second largest circle (0-7)
+    */
+    double f(double v, int n_tangent, int n_c1, int n_c2);
+
+    void geometry() const;
 
 };
 

@@ -4,9 +4,10 @@
 #ifndef LINE_H
 #define LINE_H
 
-struct line{
-    // y = mx + c
-    double m;
+// ax + by + c = 0
+struct line {
+    double a;
+    double b;
     double c;
 };
 

@@ -30,6 +30,7 @@ void vprint(std::vector<T> v) {
 }
 
 
+/*
 #include <TEllipse.h>
 void event_img(event ev){
 
@@ -100,7 +101,7 @@ void event_img(event ev){
 
     c.SaveAs("plots/event.png");
 }
-
+*/
 
 
 int main(){
@@ -117,7 +118,7 @@ int main(){
 
     ev.print();
 
-    event_img(ev);
+    //event_img(ev);
     
 
     file.close();
@@ -208,6 +209,28 @@ int read_file(std::string fname, std::vector<double>& data) {
 
     return 0;
 }
+
+
+
+// MIGHT BE UNUSED
+void linspace(std::vector<double>& v, double min, double max, int n){
+    v.resize(n); // more efficient than pushing it back a bunch
+    double spacing = (max - min) / (double)n;
+    v[0] = min;
+    for (int i=1; i<n; i++){
+        v[i] = v[i-1] + spacing;
+    }
+}
+
+// y = mx + c
+// MIGHT BE UNUSED
+void f_linear(std::vector<double>& x, std::vector<double> y, double m, double c){
+    y.resize(x.size());
+    for (size_t i=0; i<x.size(); i++){
+        y[i] = m*x[i] + c;
+    }
+}
+
 
 
 

@@ -11,62 +11,67 @@
 
 # include "event.h"
 
-
+// a constant scale factor to make TDCs not overlap during minimsation
+const int SCALE {1000};
 
 void conv_hit_to_coords(hit h, double &x, double &y){
-    // bottom left @ (1,1)
-    x = h.layer + 1;
-    y = h.wire + 1;
-    if (h.layer % 2 == 1){
-        y += 0.5;
+    x = h.layer;
+    y = h.wire + 0.5*(h.layer%2);
+}
+
+void get_two_circle_tangent(circle c1, circle c2, line l, int n){
+    double i, j;
+    // apparently switch statements are slightly faster than if else
+    // get our 4 tangent lines with this:
+    switch (n)
+    {
+    case 0:
+        i = 1.; j = 1.; break;
+
+    case 1:
+        i = 1.; j = -1.; break;
+
+    case 2:
+        i = -1.; j = 1.; break;
+    
+    case 3:
+        i = -1.; j = -1.; break;
+    
+    default:
+        i = 1.; j = 1.; break;
     }
+
+    double r1 {c1.r * i};
+    double r2 {c2.r * j};
+
+    double dr {r2 - r1};
+
+    double x = c2.x0 - c1.x0;
+    double y = c2.y0 - c1.y0;
+
+    double z = x*x + y*y;
+    double d = sqrt( std::abs(z - dr*dr) );
+
+    // ax + by + c = 0
+    l.a = (x*dr + y*d) / z;
+    l.b = (y*dr - x*d) / z;
+    l.c = r1 - c1.x0*l.a - c1.y0*l.b;
+}
+
+// shortest distance between line and circle
+double circle_line_distance(circle c, line l){
+    return std::abs(l.a*c.x0 + l.b*c.y0 + l.c) / sqrt(l.a*l.a + l.b*l.b);
 }
 
 
-double sqrt(double x){
-    return std::pow(x, 0.5);
-}
-
-
-
-void get_two_circle_tangents(circle c1, circle c2, line l[4]){
-    // Solutions to the tangents of two circles is derived here
-    // https://cp-algorithms.com/geometry/tangents-to-two-circles.html
-
-    // 4 tangent solutions in general hence l[4]
-    for (int i=0; i<4; i++){
-        double c1r = c1.r;
-        double c2r = c2.r;
-        if (i == 0){
-            c1r = -c1.r;
-            c2r = -c2.r;
-        } else if (i == 1){
-            c1r = -c1.r;
-        } else if (i == 2){
-            c2r = -c2.r;
-        }
-        // else the normal solution
-
-        double dr {c2r - c1r};
-
-
-        double den { c2.x0*c2.x0 + c2.y0*c2.y0 };
-        double a = {( (dr*c2.x0) + c2.y0*sqrt(den - dr*dr) ) / den};
-        double b = {( (dr*c2.y0) + c2.x0*sqrt(den - dr*dr) ) / den};
-        double c = c1r - a*c1.x0 - b*c1.y0;
-
-        l[i].m = -a/b;
-        l[i].c = -c/b;
-        std::cout<<"l["<<i<<"].m: "<<l[i].m<<", l["<<i<<"].c: "<<l[i].c<<std::endl;
-    }
-    //std::cout<<"end\n";
+double minimise(double (*f)(double, int, int, int), int n_tangent, int n_c1, int n_c2, double lbound, double ubound){
+ 
+    return 0.;
 }
 
 
 
-
-
-
+/* CLASS EVENT DEFINITIONS */
 
 event::event(){
 
@@ -80,8 +85,7 @@ event::event(){
 
 
 event::event(char (&buffer)[16]){
-    // sizeof(char) = 1
-    // sizeof(uint16_t) = 2
+    // sizeof(char) = 1, sizeof(uint16_t) = 2
     
     // loop through the buffer and create hits
     hit new_hit;
@@ -92,10 +96,8 @@ event::event(char (&buffer)[16]){
         // to avoid the sign bit being set to 1
         unsigned char uch1 { static_cast<unsigned char>(buffer[i]) };
         unsigned char uch2 { static_cast<unsigned char>(buffer[i+1]) };
-        // I think you can get around this with std::bit_cast in C++20
-        // or memcpy
+        // You can get around this with std::bit_cast in C++20 or memcpy
         // https://stackoverflow.com/questions/332030/when-should-static-cast-dynamic-cast-const-cast-and-reinterpret-cast-be-used
-
 
         //std::cout<<std::bitset<8>(uch1)<<" "<<std::bitset<8>(uch2)<<std::endl;
         
@@ -126,56 +128,64 @@ void event::print() const {
     }   
 }
 
-
-#include <TGraph.h>
-
-// MIGHT BE UNUSED
-void linspace(std::vector<double>& v, double min, double max, int n){
-    v.resize(n); // more efficient than pushing it back a bunch
-    double spacing = (max - min) / (double)n;
-    v[0] = min;
-    for (int i=1; i<n; i++){
-        v[i] = v[i-1] + spacing;
-    }
-}
-
-// y = mx + c
-// MIGHT BE UNUSED
-void f_linear(std::vector<double>& x, std::vector<double> y, double m, double c){
-    y.resize(x.size());
-    for (size_t i=0; i<x.size(); i++){
-        y[i] = m*x[i] + c;
-    }
-}
-
-void event::geometry(std::vector<line>& lvec) const{
-    line l[4];
-
-    for (int i=0; i<7; i++){
-        std::cout<<"i: "<<i<<std::endl;
-        double x0, y0, x1, y1;
-        conv_hit_to_coords(hits[i], x0, y0);
-        conv_hit_to_coords(hits[i+1], x1, y1);
-
-
-        // TDC / 1025 to make sure the circles dont overlap
-        //(im using 2cm or sqrt(5)cm as the seperation between circles)
-        circle c1 = {x0, y0, hits[i].TDC / 2000.};
-        circle c2 = {x1, y1, hits[i+1].TDC / 2000.};
-
-        get_two_circle_tangents(c1, c2, l);
-
-        for (int j=0; j<4; j++){
-            lvec.push_back(l[j]);
+// get the index of the two highest tdcs in event.hits
+void event::get_two_largest_circles(int& i, int& j) const {
+    // this would be easiest with std::max_element
+    // would need to convert hits to a vector or std::array
+    i = 0;
+    j = 1;
+    for (int k=0; k<8; k++){
+        if (hits[k].TDC > hits[i].TDC){
+            j = i;
+            i = k;
+        } else if (hits[k].TDC > hits[j].TDC){
+            j = k;
         }
     }
 }
 
 
 
+double event::f(double v, int n_tangent, int n_c1, int n_c2){
+    // setup circles with TDC scaled by v
+    double x0, y0, x1, y1, x2, y2;
+    conv_hit_to_coords(hits[n_c1], x0, y0);
+    conv_hit_to_coords(hits[n_c2], x1, y1);
+
+    circle c1(x0, y0, hits[n_c1].TDC / SCALE * v);
+    circle c2(x1, y1, hits[n_c2].TDC / SCALE * v);
+
+    // get the tangent line
+    line l;
+    get_two_circle_tangent(c1, c2, l, n_tangent);
+
+    // total_distance - what we want to minimise
+    double total_distance = 0.;
 
 
+    for (int i=0; i<8; i++){
+        if (i == n_c1 || i == n_c2){
+            // we know this is 0 as the tangent was drawn to these circles
+            continue;
+        } else {
+            conv_hit_to_coords(hits[i], x2, y2);
+            circle c(x2, y2, hits[i].TDC / SCALE * v);
+            c.r = hits[i].TDC / SCALE * v;
+            total_distance += circle_line_distance(c, l);
+        }
+    }
+    return total_distance;
+}
 
+
+void event::geometry() const{
+    // get the largest circles
+    int i, j;
+    get_two_largest_circles(i, j);
+
+    // minimise f with respect to v for all 4 tangent lines!
+    
+}
 
 
 
