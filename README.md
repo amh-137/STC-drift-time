@@ -19,3 +19,7 @@ vector class to handle the data? Or should i just use std::vector
 * make sure using 4 spaces NOT tab (ctrl shift p convert indentation to spaces)
 
 ## Notes (temp)
+Use paralisation?
+Remember to load chhunks of 1000 events or something
+-> Maybe not actually a problem
+-> But for root file output definitely do this.
