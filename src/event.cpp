@@ -8,35 +8,38 @@
 # include <cmath>
 
 #include <TLine.h>
+#include <TGraph.h>
+#include <TCanvas.h>
+#include <TEllipse.h>
 
 # include "event.h"
 
 // a constant scale factor to make TDCs not overlap during minimsation
 const int SCALE {1000};
 
+// static member variable
+int event::count = 0;
+
+
+
 void conv_hit_to_coords(hit h, double &x, double &y){
     x = h.layer;
     y = h.wire + 0.5*(h.layer%2);
 }
 
-void get_two_circle_tangent(circle c1, circle c2, line l, int n){
+void get_two_circle_tangent(circle c1, circle c2, line& l, int n){
     double i, j;
-    // apparently switch statements are slightly faster than if else
+    // stackoverflow: switch statements are slightly faster than if else or using math to do it
     // get our 4 tangent lines with this:
-    switch (n)
-    {
+    switch (n) {
     case 0:
         i = 1.; j = 1.; break;
-
     case 1:
         i = 1.; j = -1.; break;
-
     case 2:
         i = -1.; j = 1.; break;
-    
     case 3:
         i = -1.; j = -1.; break;
-    
     default:
         i = 1.; j = 1.; break;
     }
@@ -50,7 +53,7 @@ void get_two_circle_tangent(circle c1, circle c2, line l, int n){
     double y = c2.y0 - c1.y0;
 
     double z = x*x + y*y;
-    double d = sqrt( std::abs(z - dr*dr) );
+    double d = std::pow( std::abs(z - dr*dr), 0.5 );
 
     // ax + by + c = 0
     l.a = (x*dr + y*d) / z;
@@ -60,13 +63,63 @@ void get_two_circle_tangent(circle c1, circle c2, line l, int n){
 
 // shortest distance between line and circle
 double circle_line_distance(circle c, line l){
-    return std::abs(l.a*c.x0 + l.b*c.y0 + l.c) / sqrt(l.a*l.a + l.b*l.b);
+    return std::abs(l.a*c.x0 + l.b*c.y0 + l.c) / std::pow(l.a*l.a + l.b*l.b, 0.5);
 }
 
 
-double minimise(double (*f)(double, int, int, int), int n_tangent, int n_c1, int n_c2, double lbound, double ubound){
- 
-    return 0.;
+double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2){
+    // setup circles with TDC scaled by v
+    double x0, y0, x1, y1, x2, y2;
+    conv_hit_to_coords(ev.hits[n_c1], x0, y0);
+    conv_hit_to_coords(ev.hits[n_c2], x1, y1);
+
+    circle c1(x0, y0, ev.hits[n_c1].TDC / SCALE * v);
+    circle c2(x1, y1, ev.hits[n_c2].TDC / SCALE * v);
+
+    // get the tangent line
+    line l;
+    get_two_circle_tangent(c1, c2, l, n_tangent);
+
+    // total_distance - what we want to minimise
+    double total_distance = 0.;
+
+
+    for (int i=0; i<8; i++){
+        if (i == n_c1 || i == n_c2){
+            // we know this is 0 as the tangent was drawn to these circles
+            continue;
+        } else {
+            conv_hit_to_coords(ev.hits[i], x2, y2);
+            circle c(x2, y2, ev.hits[i].TDC / SCALE * v);
+            total_distance += circle_line_distance(c, l);
+        }
+    }
+    return total_distance;
+}
+
+
+double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, double v, int n_tangent, int n_c1, int n_c2, double step){
+    // f(x + h) - f(x - h) / 2h
+    return (f(ev, v + step, n_tangent, n_c1, n_c2) - f(ev, v - step, n_tangent, n_c1, n_c2)) / (2.*step);
+}
+
+
+double minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double lbound, double ubound, double v_init){
+    
+    // for now, gradient descent
+    double v = v_init;
+    double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+    while (std::abs(grad) > 1e-6){
+        v -= grad * step;
+        grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+        //std::cout<<"v: "<<v<<" grad: "<<grad<<std::endl;
+    }
+
+
+    // TO DO
+    // check bounds
+    // check this is the right implimentation of gradient descent
+    return v;
 }
 
 
@@ -74,17 +127,19 @@ double minimise(double (*f)(double, int, int, int), int n_tangent, int n_c1, int
 /* CLASS EVENT DEFINITIONS */
 
 event::event(){
-
-    std::cout << "Default constructor" << std::endl;
+    v_best = 0.;
+    count++;
     for (int i = 0; i < 8; i++){
         hits[i].layer = 999;
         hits[i].wire = 999;
-        hits[i].TDC = 999;
+        hits[i].TDC = 999.;
     }
 }
 
 
 event::event(char (&buffer)[16]){
+    v_best = 0.;
+    count++;
     // sizeof(char) = 1, sizeof(uint16_t) = 2
     
     // loop through the buffer and create hits
@@ -113,7 +168,8 @@ event::event(char (&buffer)[16]){
         new_hit.wire = (line & 0b111000) >> 3;
 
         // final 10 bits is TDC
-        new_hit.TDC = (line & 0b1111111111000000) >> 6;
+        uint16_t TDC = (line & 0b1111111111000000) >> 6;
+        new_hit.TDC = static_cast<double>(TDC);
 
         //std::cout << "Layer: " << new_hit.layer << ", Wire: " << new_hit.wire << ", TDC: " << new_hit.TDC << std::endl;
         hits[j] = new_hit;
@@ -145,48 +201,87 @@ void event::get_two_largest_circles(int& i, int& j) const {
 }
 
 
-
-double event::f(double v, int n_tangent, int n_c1, int n_c2){
-    // setup circles with TDC scaled by v
-    double x0, y0, x1, y1, x2, y2;
-    conv_hit_to_coords(hits[n_c1], x0, y0);
-    conv_hit_to_coords(hits[n_c2], x1, y1);
-
-    circle c1(x0, y0, hits[n_c1].TDC / SCALE * v);
-    circle c2(x1, y1, hits[n_c2].TDC / SCALE * v);
-
-    // get the tangent line
-    line l;
-    get_two_circle_tangent(c1, c2, l, n_tangent);
-
-    // total_distance - what we want to minimise
-    double total_distance = 0.;
-
-
-    for (int i=0; i<8; i++){
-        if (i == n_c1 || i == n_c2){
-            // we know this is 0 as the tangent was drawn to these circles
-            continue;
-        } else {
-            conv_hit_to_coords(hits[i], x2, y2);
-            circle c(x2, y2, hits[i].TDC / SCALE * v);
-            c.r = hits[i].TDC / SCALE * v;
-            total_distance += circle_line_distance(c, l);
-        }
-    }
-    return total_distance;
-}
-
-
-void event::geometry() const{
+void event::geometry(){
     // get the largest circles
     int i, j;
     get_two_largest_circles(i, j);
 
     // minimise f with respect to v for all 4 tangent lines!
+    double v;
+    double step = 0.001;
+    double lbound = 0.001;
+    double ubound = 0.05;
+    double v_init = 0.02;
+
+    double d_best = 1e16;
+
+    for (int n_tangent = 0; n_tangent < 4; n_tangent++){
+        v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init);
+        std::cout << "Tangent " << n_tangent << " has v = " << v << std::endl;
+        double d_curr = f(*this, v, n_tangent, i, j);
+        if (d_curr < d_best){
+            v_best = v;
+            best_tangent = n_tangent;
+            d_best = d_curr;
+        }
+    }
+
     
+
 }
 
+void event::plot() const{
+    // will use TGraph TEllips and TLine to plot the event + best fit of lines.
+    std::string text = "Event ID" + std::to_string(count);
+    // could use TLateX to make it prettier
+    TCanvas c("canvas", "Event Display", 800, 800);
+    c.cd();
+    c.PaintText(0.1, 0.9, text.c_str()); // Desn't work for some reason
+    TGraph g;
+    g.SetTitle("Event;x (cm);y (cm)");
+
+    // bottom left @ (0,0)
+    for (int i=0; i<8; i++){
+        for (int j=0; j<8; j++){
+            if (i%2 == 0){
+                g.AddPoint(i, j);
+            }
+            else {
+                g.AddPoint(i, j+.5);
+            }
+        }
+    }
+    g.Draw("AP*");
+
+    // plot the circles with v_best
+    for (int i=0; i<8; i++){
+        double x, y;
+        conv_hit_to_coords(hits[i], x, y);
+        double r = hits[i].TDC / SCALE * v_best;
+        TEllipse* e = new TEllipse(x, y, r, r);
+        e->SetFillStyle(1001);
+        e->SetFillColor(kBlue);
+        e->Draw("same");
+    }
+
+    // plot the tangent line
+    double x0, y0, x1, y1;
+    int i, j;
+    get_two_largest_circles(i, j);
+    conv_hit_to_coords(hits[i], x0, y0);
+    conv_hit_to_coords(hits[j], x1, y1);
+    circle c1(x0, y0, hits[i].TDC / SCALE * v_best);
+    circle c2(x1, y1, hits[j].TDC / SCALE * v_best);
+    line l;
+    get_two_circle_tangent(c1, c2, l, best_tangent);
+    
+    TLine* tl = new TLine(0, -l.c/l.b, 8, -(l.a*8 + l.c)/l.b);
+    tl->SetLineColor(kRed);
+    tl->Draw("same");
+    c.SaveAs("plots/event.png");
+
+    delete tl;
+}
 
 
 // end event.cpp

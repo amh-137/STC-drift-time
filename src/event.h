@@ -16,9 +16,14 @@
 #include "circle.h"
 
 class event {
-private:
+protected:
     // an event contains 8 hits
     hit hits[8];
+    double v_best;
+    int best_tangent;
+
+    // Event counter
+    static int count;
 
 public:
     // constructors
@@ -42,10 +47,11 @@ public:
      * @param n_c1: number of largest circle (0-7)
      * @param n_c2: number of second largest circle (0-7)
     */
-    double f(double v, int n_tangent, int n_c1, int n_c2);
+    friend double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2);
 
-    void geometry() const;
+    void geometry();
 
+    void plot() const;
 };
 
 
