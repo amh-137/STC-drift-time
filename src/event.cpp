@@ -278,7 +278,9 @@ void event::plot() const{
     TLine* tl = new TLine(0, -l.c/l.b, 8, -(l.a*8 + l.c)/l.b);
     tl->SetLineColor(kRed);
     tl->Draw("same");
-    c.SaveAs("plots/event.png");
+    
+    std::string fname {"plots/event" + std::to_string(count) + ".png"};
+    c.SaveAs(fname.c_str());
 
     delete tl;
 }
