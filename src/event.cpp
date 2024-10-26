@@ -109,7 +109,7 @@ double minimise(double (*f)(const event&, double, int, int, int), const event* e
     // for now, gradient descent
     double v = v_init;
     double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
-    while (std::abs(grad) > 1e-6){
+    while (std::abs(grad) > 1e-5){
         v -= grad * step;
         grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
         //std::cout<<"v: "<<v<<" grad: "<<grad<<std::endl;
@@ -217,7 +217,7 @@ void event::geometry(){
 
     for (int n_tangent = 0; n_tangent < 4; n_tangent++){
         v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init);
-        std::cout << "Tangent " << n_tangent << " has v = " << v << std::endl;
+        //std::cout << "Tangent " << n_tangent << " has v = " << v << std::endl;
         double d_curr = f(*this, v, n_tangent, i, j);
         if (d_curr < d_best){
             v_best = v;

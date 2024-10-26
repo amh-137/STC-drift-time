@@ -52,6 +52,8 @@ public:
     void geometry();
 
     void plot() const;
+
+    double get_v_best() const { return v_best; }
 };
 
 

@@ -6,7 +6,8 @@
 #include <string>
 #include <fstream>
 #include <vector>
-//#include <TTree.h> // include ROOT
+#include <TFile.h>
+#include <TH1F.h>
 
 
 #include "event.h"
@@ -55,14 +56,34 @@ int main(){
         return 1;
     }
 
+
+    TFile *f = new TFile("data/v.root", "RECREATE");
+    TH1F *h = new TH1F("v", "Distribution of v", 25, -10., 10.);
+
+    double v_best_arr[100]; // 100 events for now for small samples while its still slow.
+
     event ev2;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 2000; i++) {
         read_event(file, i, ev2);
         ev2.geometry();
-        if (!(i % 25)) {
+        if (!(i % 100000)) {
             ev2.plot();
         }
+        v_best_arr[i%100] = std::abs(ev2.get_v_best());
+
+        if (i%100==0){
+            std::cout<<i<<" events processed - writing to histogram"<<std::endl;
+            for (int j = 0; j < 100; j++) {
+                h->Fill(v_best_arr[j]);
+            }
+        }
     }
+
+    h->Write();
+    f->Close();
+
+    //delete f;
+    //delete h;
     
     return 0;
 }

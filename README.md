@@ -25,6 +25,9 @@ Remember to load chhunks of 1000 events or something
 -> Maybe not actually a problem
 -> But for root file output definitely do this.
 
+SHOULD I BE USING MEAN SQUARED ERROR?
+https://www.geeksforgeeks.org/how-to-implement-a-gradient-descent-in-python-to-find-a-local-minimum/
+
 
 https://cp-algorithms.com/geometry/tangents-to-two-circles.html
-https://math.stackexchange.com/questions/1481904/distance-between-line-and-circle
+https://math.stackexchange.com/questions/1481904/distance-between-line-and-circle#
