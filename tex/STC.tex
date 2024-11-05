@@ -11,4 +11,66 @@
 
 This report outlines a program written to study the drift-time relationship for gasses in the Small Prototype Test Chamber (STC) for the ALEPH Inner Tracking Chamber (ITC).
 
+\section{Introduction}
+\label{sec:intro}
+
+\section{Method 1 - Minimisation \& Tangents}
+\label{sec:method}
+I utilize a minimisation algorithm with some basic geometry to find the velocities of ionisation electrons. This works as follows:
+\begin{itemize}
+    \item The two largest circles by TDC time are picked $c_1$ and $c_2$.
+    \item The four tangents for these two circles are caluclated using \texttt{???}.
+    \item The sum of the squares of the distances to the other 6 circles are found (the distance to the two largest circles is zero as these are tangents).
+    \item The radii of the circles is varied by multiplying by a constant factor $v$ and the sum of the squares of the distances is recalculated.
+\end{itemize}
+The factor $v$ is varied until the sum of the squares of the distances is minimised. This is the velocity of the ionisation electrons.
+
+\subsection{Tangents \& Circle - Line Distances}
+\label{sec:tangents}
+We define circles and lines by their equations
+\begin{equation}
+    (x - x_0)^2 + (y - y_0)^2 = r^2
+    \label{eq:circle}
+\end{equation}
+\begin{equation}
+    ax + by + c = 0,
+    \label{eq:line}
+\end{equation}
+The parameters of these equations ($a$, $b$, $c$, $x_0$, $y_0$, $r$) are stored in the structs \texttt{line} and \texttt{circle}. The tangents are therefore lines with
+\begin{equation}
+    a = 
+    b = 
+    c = .
+    \label{eq:tangents}
+\end{equation}
+Finally, the distance between the $i$th circle and a line is given by
+\begin{equation}
+    d_i = 
+    \label{eq:dist}
+\end{equation}
+
+\subsection{Minimisation}
+\label{sec:minimisation}
+The loss function used is defined as:
+\begin{equation}
+    L = \sum\limits_{\substack{i=1 \\ i\neq c_1, c_2}}^{8} d_i^2
+    \label{eq:loss}
+\end{equation}
+This is minimised with gradient descent. The gradient of this function could be caluclated analytically, however we used the definition of the derivative.
+\begin{equation}
+    \frac{df}{dv} = \frac{f(v + \delta v) - f(v)}{\delta v}
+    \label{eq:grad}
+\end{equation}
+In the function \texttt{???}, iterate
+\begin{equation}
+    v_{j+1} = v_j - \eta \frac{df}{dv}\Bigr|_{v_j}
+    \label{eq:iter}
+\end{equation}
+
+
+\section{Method 2 - Linear Regression \& Invarient Points}
+\label{sec:linreg}
+
+
+
 \end{document}
