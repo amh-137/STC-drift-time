@@ -58,22 +58,22 @@ int main(){
 
 
     TFile *f = new TFile("data/v.root", "RECREATE");
-    TH1F *h = new TH1F("v", "Distribution of v", 25, -10., 10.);
+    TH1F *h = new TH1F("v", "Distribution of v", 50, 0., 10.);
 
-    double v_best_arr[100]; // 100 events for now for small samples while its still slow.
+    double v_best_arr[10000]; // 100 events for now for small samples while its still slow.
 
     event ev2;
-    for (int i = 0; i < 2000; i++) {
+    for (int i = 0; i < 1000000; i++) {
         read_event(file, i, ev2);
         ev2.geometry();
-        if (!(i % 100000)) {
+        if (!(i % 100000000)) {
             ev2.plot();
         }
-        v_best_arr[i%100] = std::abs(ev2.get_v_best());
+        v_best_arr[i%10000] = std::abs(ev2.get_v_best());
 
-        if (i%100==0){
+        if (i%10000==0){
             std::cout<<i<<" events processed - writing to histogram"<<std::endl;
-            for (int j = 0; j < 100; j++) {
+            for (int j = 0; j < 10000; j++) {
                 h->Fill(v_best_arr[j]);
             }
         }

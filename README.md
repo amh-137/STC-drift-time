@@ -31,3 +31,10 @@ https://www.geeksforgeeks.org/how-to-implement-a-gradient-descent-in-python-to-f
 
 https://cp-algorithms.com/geometry/tangents-to-two-circles.html
 https://math.stackexchange.com/questions/1481904/distance-between-line-and-circle#
+
+
+
+
+https://en.wikipedia.org/wiki/Powell%27s_method <- optimisation method uses no derivatives
+
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize_scalar.html#scipy.optimize.minimize_scalar 

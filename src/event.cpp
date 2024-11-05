@@ -15,7 +15,7 @@
 # include "event.h"
 
 // a constant scale factor to make TDCs not overlap during minimsation
-const int SCALE {1000};
+const int SCALE {2000};
 
 // static member variable
 int event::count = 0;
@@ -91,7 +91,8 @@ double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2){
         } else {
             conv_hit_to_coords(ev.hits[i], x2, y2);
             circle c(x2, y2, ev.hits[i].TDC / SCALE * v);
-            total_distance += circle_line_distance(c, l);
+            double cld = circle_line_distance(c, l);
+            total_distance += cld*cld;
         }
     }
     return total_distance;
@@ -105,20 +106,22 @@ double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, d
 
 
 double minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double lbound, double ubound, double v_init){
-    
+    //int n_itters = 0;
     // for now, gradient descent
     double v = v_init;
     double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
-    while (std::abs(grad) > 1e-5){
+    while (std::abs(grad) > 1e-1){
         v -= grad * step;
         grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
         //std::cout<<"v: "<<v<<" grad: "<<grad<<std::endl;
+        //n_itters++;
     }
 
 
     // TO DO
     // check bounds
     // check this is the right implimentation of gradient descent
+    //std::cout<<n_itters<<" itterations"<<std::endl;
     return v;
 }
 
@@ -208,10 +211,10 @@ void event::geometry(){
 
     // minimise f with respect to v for all 4 tangent lines!
     double v;
-    double step = 0.001;
-    double lbound = 0.001;
-    double ubound = 0.05;
-    double v_init = 0.02;
+    double step = 0.01;
+    double lbound = 0;
+    double ubound = 50;
+    double v_init = 5.;
 
     double d_best = 1e16;
 
@@ -279,7 +282,7 @@ void event::plot() const{
     tl->SetLineColor(kRed);
     tl->Draw("same");
     
-    std::string fname {"plots/event" + std::to_string(count) + ".png"};
+    std::string fname {"plots/ev-display/" + std::to_string(count) + ".png"};
     c.SaveAs(fname.c_str());
 
     delete tl;
