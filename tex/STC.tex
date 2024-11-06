@@ -9,13 +9,49 @@
 \author{Alex Hergenhan\\CID: 0604432}
 \maketitle
 
-This report outlines a program written to study the drift-time relationship for gasses in the Small Prototype Test Chamber (STC) for the ALEPH Inner Tracking Chamber (ITC).
+This report outlines a program written to study the drift-time relationship for gasses in the Small Prototype Test Chamber (STC) for the ALEPH Inner Tracking Chamber (ITC). The git repository for this project can be found at \url{https://github.com/amh-137/STC-drift-time}.
 
 \section{Introduction}
 \label{sec:intro}
 
-\section{Method 1 - Minimisation \& Tangents}
-\label{sec:method}
+
+
+\section{Program Structure \& Design}
+\label{sec:program}
+The program is structured as follows:
+\begin{itemize}
+    \item \texttt{main.cpp} - The main file that reads the data and calls the functions.
+    \item \texttt{circle.h}, \texttt{line.h}, \texttt{hit.h} - Contains the structs for storing objects
+    \item \texttt{event.h}, \texttt{event.cpp} - The main event class - stores 8 hits and associated information, with event processing methods.
+    \item \texttt{event-helpers.h} , \texttt{event-helpers.cpp} - Helper functions for the event class.
+\end{itemize}
+A \texttt{make} file is included to compile the program, or it can be compiled with the command
+\begin{verbatim}
+    g++ src/main.cpp src/event.cpp src/event-helpers.cpp -o STC -std=c++17 -Wall `root-config --cflags` `root-config --libs`
+\end{verbatim}
+A seperate script, \texttt{build-TeX.sh} is included for building this document. Here we outline a pseudocode for the program:
+\begin{verbatim}
+    while data:
+        read 16 bytes from file
+        create EVENT object with 8 HITS
+        get V with minimisation
+        get THETA
+    
+    bin V, THETA in histograms
+    fit histograms
+    return results
+\end{verbatim}
+An inital mockup of the program was written in C++, (as can be seen in early commits to the github) however it became challenging to test new ideas in C++ due to my comparitive unfamiliarity with \texttt{ROOT}. I therefore switched to Python, testing ideas, geometry, and minimisation algorithms in notebooks in the \texttt{py-test} directory. With a working implimentation, I translated with back to C++, hoping the compiled program would be faster. This was not the case with simple gradient descent, so I switched back to python to study and optimise the loss function. I moved from sum of distances to sum of squares of distances, and then to the secant method for faster minimisation. This was then translated back to C++ for the final implimentation.
+
+\section{Implimentation}
+\label{sec:implimentation}
+
+
+
+\subsection{Reading Data}
+\label{sec:reading}
+
+
 I utilize a minimisation algorithm with some basic geometry to find the velocities of ionisation electrons. This works as follows:
 \begin{itemize}
     \item The two largest circles by TDC time are picked $c_1$ and $c_2$.
@@ -56,16 +92,22 @@ The loss function used is defined as:
     L = \sum\limits_{\substack{i=1 \\ i\neq c_1, c_2}}^{8} d_i^2
     \label{eq:loss}
 \end{equation}
-Initially, this was minimised with gradient descent \ref{app:gradient-descent}. The gradient of this function can be caluclated analytically, however we used the definition of the derivative
+Initially, this was minimised with gradient descent \ref{app:gradient-descent}. The gradient of this function can be caluclated analytically, however we used the definition of the derivative \ref{eq:grad}. Gradient descent, however was extremely slow and so we switched to the secant method for minimisation.
 \begin{equation}
     \frac{df}{dv} = \frac{f(v + \delta v) - f(v)}{\delta v}.
     \label{eq:grad}
 \end{equation}
+The secant method is a minimisation algorithm that uses the secant line find the approximate minima of a function $f(x)$ \cite{??}. The secant line is defined as
 
 
 
-\section{Method 2 - Linear Regression \& Invarient Points}
-\label{sec:linreg}
+
+\section{Results}
+\label{sec:results}
+
+\section{Acknowledgements}
+\label{sec:acknowledgements}
+Thanks to Calvin Dyson for his reccomendation of the secant method for minimisation. Thanks to Dr Beuselinck for the fantastic and engaging project - it has certainly led to a fantastic amount of discussion and intruigment withing the PG $1^{st}$ year group.
 
 
 \appendix

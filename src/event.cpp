@@ -127,9 +127,15 @@ void event::geometry(){
             v_best = v;
             best_tangent = n_tangent;
             d_best = d_curr;
+            
+            line l;
+            get_two_circle_tangent(circle(hits[i].layer, hits[i].wire, hits[i].TDC / SCALE * v), circle(hits[j].layer, hits[j].wire, hits[j].TDC / SCALE * v), l, best_tangent);
+            double m {-l.a/l.b};
+            theta_best = std::atan(m);
         }
     }
 }
+
 
 void event::plot() const{
     // will use TGraph TEllips and TLine to plot the event + best fit of lines.

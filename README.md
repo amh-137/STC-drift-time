@@ -1,39 +1,26 @@
 # STC-DRIFT-TIME
+Finding the velocity of the drift electrons in the STC for the ALEPH experiment.
 
-Read STC.pdf for details.
+All c++ code is located in `src/`, `py-test/` contains jupyter notebooks and python code that I used for testing ideas. No plots here where used in my final results, all of these came from the c++ code.
 
 ## Build C++
+Prefered:
 ```make```
-or
-``` g++ ... ```
+or alternitvely
+``` g++ src/main.cpp src/event.cpp src/event-helpers.cpp -o STC -std=c++17 -Wall `root-config --cflags` `root-config --libs` ```
 
 ## Build LaTeX
 ``` source build-TeX.sh ```
 
 
-## Temp (Ideas)
-function to read in data
-vector class to handle the data? Or should i just use std::vector
 
-## To Do
-* Rewrite read_file to do chunk size reading of data
-* make sure using 4 spaces NOT tab (ctrl shift p convert indentation to spaces)
-* give circle a constructors!
 
 ## Notes (temp)
 Use paralisation?
-Remember to load chhunks of 1000 events or something
--> Maybe not actually a problem
--> But for root file output definitely do this.
-
-SHOULD I BE USING MEAN SQUARED ERROR?
-https://www.geeksforgeeks.org/how-to-implement-a-gradient-descent-in-python-to-find-a-local-minimum/
-
+Check secant method
 
 https://cp-algorithms.com/geometry/tangents-to-two-circles.html
 https://math.stackexchange.com/questions/1481904/distance-between-line-and-circle#
-
-
 
 
 https://en.wikipedia.org/wiki/Powell%27s_method <- optimisation method uses no derivatives

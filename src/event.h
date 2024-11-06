@@ -57,9 +57,11 @@ public:
 
     void plot() const;
 
+    // getters
     double get_v_best() const { return v_best; }
     int get_count() const { return count; }
     int get_best_tangent() const { return best_tangent; }
+    double get_theta_best() const { return theta_best; }
 };
 
 
