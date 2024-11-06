@@ -12,6 +12,7 @@
 
 #include "event.h"
 #include "hit.h"
+#include "event-helpers.h"
 
 int read_file(std::string fname, std::vector<double>& data); // returns 0 if success
 
@@ -61,7 +62,7 @@ int main(){
 
 
     TFile *f = new TFile("data/v.root", "RECREATE");
-    TH1F *h = new TH1F("v", "Distribution of v", 250, 3., 7.);
+    TH1F *h = new TH1F("v", "Distribution of v", 250, 40., 70.);
 
     double v_best_arr[10000]; // 100 events for now for small samples while its still slow.
 
@@ -72,7 +73,10 @@ int main(){
         if (!(i % plot_frequency)) {
             ev2.plot();
         }
-        v_best_arr[i%10000] = std::abs(ev2.get_v_best());
+
+        // real velocity = v_best * SCALE / 2 [cm/ns]
+        // real velocity [um/ns] = v_best * SCALE / 2 * 
+        v_best_arr[i%10000] = std::abs(ev2.get_v_best()) / SCALE * 10000;
 
         if (i%10000==0){
             std::cout<<i<<" events processed - writing to histogram"<<std::endl;

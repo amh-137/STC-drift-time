@@ -56,21 +56,24 @@ The loss function used is defined as:
     L = \sum\limits_{\substack{i=1 \\ i\neq c_1, c_2}}^{8} d_i^2
     \label{eq:loss}
 \end{equation}
-This is minimised with gradient descent. The gradient of this function could be caluclated analytically, however we used the definition of the derivative.
+Initially, this was minimised with gradient descent \ref{app:gradient-descent}. The gradient of this function can be caluclated analytically, however we used the definition of the derivative
 \begin{equation}
-    \frac{df}{dv} = \frac{f(v + \delta v) - f(v)}{\delta v}
+    \frac{df}{dv} = \frac{f(v + \delta v) - f(v)}{\delta v}.
     \label{eq:grad}
 \end{equation}
-In the function \texttt{???}, iterate
-\begin{equation}
-    v_{j+1} = v_j - \eta \frac{df}{dv}\Bigr|_{v_j}
-    \label{eq:iter}
-\end{equation}
+
 
 
 \section{Method 2 - Linear Regression \& Invarient Points}
 \label{sec:linreg}
 
 
+\appendix
+\section{Gradient Descent}
+\label{app:gradient-descent}
+\begin{equation}
+    v_{j+1} = v_j - \eta \frac{df}{dv}\Bigr|_{v_j}
+    \label{eq:iter}
+\end{equation}
 
 \end{document}

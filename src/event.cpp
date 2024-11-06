@@ -13,147 +13,26 @@
 #include <TEllipse.h>
 
 # include "event.h"
+# include "event-helpers.h"
 
-// a constant scale factor to make TDCs not overlap during minimsation
-const int SCALE {2000};
+/* CLASS DEPENDANT HELPER FUNCTIONS DEFINTIONS*/
+// for other, non class-dependant helper functions, see event-helpers.cpp
+double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2);
+double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, double v, int n_tangent, int n_c1, int n_c2, double step);
+double minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double lbound, double ubound, double v_init);
+double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init);
+
+
+/* CLASS EVENT DEFINITIONS */
 
 // static member variable
 int event::count = 0;
 
 
-
-void conv_hit_to_coords(hit h, double &x, double &y){
-    x = h.layer;
-    y = h.wire + 0.5*(h.layer%2);
-}
-
-void get_two_circle_tangent(circle c1, circle c2, line& l, int n){
-    double i, j;
-    // stackoverflow: switch statements are slightly faster than if else or using math to do it
-    // get our 4 tangent lines with this:
-    switch (n) {
-    case 0:
-        i = 1.; j = 1.; break;
-    case 1:
-        i = 1.; j = -1.; break;
-    case 2:
-        i = -1.; j = 1.; break;
-    case 3:
-        i = -1.; j = -1.; break;
-    default:
-        i = 1.; j = 1.; break;
-    }
-
-    double r1 {c1.r * i};
-    double r2 {c2.r * j};
-
-    double dr {r2 - r1};
-
-    double x = c2.x0 - c1.x0;
-    double y = c2.y0 - c1.y0;
-
-    double z = x*x + y*y;
-    double d = std::pow( std::abs(z - dr*dr), 0.5 );
-
-    // ax + by + c = 0
-    l.a = (x*dr + y*d) / z;
-    l.b = (y*dr - x*d) / z;
-    l.c = r1 - c1.x0*l.a - c1.y0*l.b;
-}
-
-// shortest distance between line and circle
-double circle_line_distance(circle c, line l){
-    return std::abs(l.a*c.x0 + l.b*c.y0 + l.c) / std::pow(l.a*l.a + l.b*l.b, 0.5);
-}
-
-
-double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2){
-    // setup circles with TDC scaled by v
-    double x0, y0, x1, y1, x2, y2;
-    conv_hit_to_coords(ev.hits[n_c1], x0, y0);
-    conv_hit_to_coords(ev.hits[n_c2], x1, y1);
-
-    circle c1(x0, y0, ev.hits[n_c1].TDC / SCALE * v);
-    circle c2(x1, y1, ev.hits[n_c2].TDC / SCALE * v);
-
-    // get the tangent line
-    line l;
-    get_two_circle_tangent(c1, c2, l, n_tangent);
-
-    // total_distance - what we want to minimise
-    double total_distance = 0.;
-
-
-    for (int i=0; i<8; i++){
-        if (i == n_c1 || i == n_c2){
-            // we know this is 0 as the tangent was drawn to these circles
-            continue;
-        } else {
-            conv_hit_to_coords(ev.hits[i], x2, y2);
-            circle c(x2, y2, ev.hits[i].TDC / SCALE * v);
-            double cld = circle_line_distance(c, l);
-            total_distance += cld*cld;
-        }
-    }
-    return total_distance;
-}
-
-
-double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, double v, int n_tangent, int n_c1, int n_c2, double step){
-    // f(x + h) - f(x - h) / 2h
-    return (f(ev, v + step, n_tangent, n_c1, n_c2) - f(ev, v - step, n_tangent, n_c1, n_c2)) / (2.*step);
-}
-
-
-double minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double lbound, double ubound, double v_init){
-    //int n_itters = 0;
-    // for now, gradient descent
-    double v = v_init;
-    double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
-    while (std::abs(grad) > 1e-1){
-        v -= grad * step;
-        grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
-        //std::cout<<"v: "<<v<<" grad: "<<grad<<std::endl;
-        //n_itters++;
-    }
-
-
-    // TO DO
-    // check bounds
-    // check this is the right implimentation of gradient descent
-    //std::cout<<n_itters<<" itterations"<<std::endl;
-    return v;
-}
-
-
-double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init){
-    // secant method
-    double v = v_init;
-    double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
-    double grad_prev = dfdv(f, *ev, v - step, n_tangent, n_c1, n_c2, step);
-    int n_itters = 0;
-    while (std::abs(grad) > 1e-3 && n_itters < 100000){
-        double grad_diff = grad - grad_prev;
-        v -= grad * step / grad_diff;
-        grad_prev = grad;
-        grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
-        n_itters++;
-    }
-
-    if (n_itters >= 10000){
-        std::cout<<"!! Secant method did not converge !! ev = "<<ev->get_count()<<std::endl;
-    }
-    return v;
-
-}
-
-
-
-
-/* CLASS EVENT DEFINITIONS */
-
 event::event(){
     v_best = 0.;
+    best_tangent = 5;
+    theta_best = 361.;
     count++;
     for (int i = 0; i < 8; i++){
         hits[i].layer = 999;
@@ -165,6 +44,8 @@ event::event(){
 
 event::event(char (&buffer)[16]){
     v_best = 0.;
+    best_tangent = 5;
+    theta_best = 361.;
     count++;
     // sizeof(char) = 1, sizeof(uint16_t) = 2
     
@@ -179,8 +60,6 @@ event::event(char (&buffer)[16]){
         unsigned char uch2 { static_cast<unsigned char>(buffer[i+1]) };
         // You can get around this with std::bit_cast in C++20 or memcpy
         // https://stackoverflow.com/questions/332030/when-should-static-cast-dynamic-cast-const-cast-and-reinterpret-cast-be-used
-
-        //std::cout<<std::bitset<8>(uch1)<<" "<<std::bitset<8>(uch2)<<std::endl;
         
         uint16_t rh = static_cast<uint16_t>(uch1);
         uint16_t lh = static_cast<uint16_t>(uch2) << 8;
@@ -195,7 +74,8 @@ event::event(char (&buffer)[16]){
 
         // final 10 bits is TDC
         uint16_t TDC = (line & 0b1111111111000000) >> 6;
-        new_hit.TDC = static_cast<double>(TDC);
+        new_hit.TDC = (static_cast<double>(TDC) * 0.5) + 0.25;
+        // This is important -> use the MIDDLE of the TDC bin
 
         //std::cout << "Layer: " << new_hit.layer << ", Wire: " << new_hit.wire << ", TDC: " << new_hit.TDC << std::endl;
         hits[j] = new_hit;
@@ -235,16 +115,13 @@ void event::geometry(){
     // minimise f with respect to v for all 4 tangent lines!
     double v;
     double step = 0.01;
-    double lbound = 0;
-    double ubound = 50;
-    double v_init = 5.;
+    double v_init = 9.;
 
     double d_best = 1e16;
 
     for (int n_tangent = 0; n_tangent < 4; n_tangent++){
         //v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init);
         v = secant_minimise(f, this, n_tangent, i, j, step, 1e-3, v_init);
-        //std::cout << "Tangent " << n_tangent << " has v = " << v << std::endl;
         double d_curr = f(*this, v, n_tangent, i, j);
         if (d_curr < d_best){
             v_best = v;
@@ -252,9 +129,6 @@ void event::geometry(){
             d_best = d_curr;
         }
     }
-
-    
-
 }
 
 void event::plot() const{
@@ -310,6 +184,87 @@ void event::plot() const{
     c.SaveAs(fname.c_str());
 
     delete tl;
+}
+
+
+
+
+/* CLASS EVENT DEPENDANT HELPER FUNCTIONS */
+// see event-helpers.cpp for the non class-dependent functions
+
+double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2){
+    // setup circles with TDC scaled by v
+    double x0, y0, x1, y1, x2, y2;
+    conv_hit_to_coords(ev.hits[n_c1], x0, y0);
+    conv_hit_to_coords(ev.hits[n_c2], x1, y1);
+
+    circle c1(x0, y0, ev.hits[n_c1].TDC / SCALE * v);
+    circle c2(x1, y1, ev.hits[n_c2].TDC / SCALE * v);
+
+    // get the tangent line
+    line l;
+    get_two_circle_tangent(c1, c2, l, n_tangent);
+
+    // total_distance - what we want to minimise
+    double total_distance = 0.;
+
+
+    for (int i=0; i<8; i++){
+        if (i == n_c1 || i == n_c2){
+            // we know this is 0 as the tangent was drawn to these circles
+            continue;
+        } else {
+            conv_hit_to_coords(ev.hits[i], x2, y2);
+            circle c(x2, y2, ev.hits[i].TDC / SCALE * v);
+            double cld = circle_line_distance(c, l);
+            total_distance += cld*cld;
+        }
+    }
+    return total_distance;
+}
+
+
+double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, double v, int n_tangent, int n_c1, int n_c2, double step){
+    // f(x + h) - f(x - h) / 2h
+    return (f(ev, v + step, n_tangent, n_c1, n_c2) - f(ev, v, n_tangent, n_c1, n_c2)) / (step);
+}
+
+
+double minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double lbound, double ubound, double v_init){
+    //int n_itters = 0;
+    // for now, gradient descent
+    double v = v_init;
+    double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+    while (std::abs(grad) > 1e-1){
+        v -= grad * step;
+        grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+        //std::cout<<"v: "<<v<<" grad: "<<grad<<std::endl;
+        //n_itters++;
+    }
+    return v;
+}
+
+
+double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init){
+    // secant method
+    double v = v_init;
+    double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+    double grad_prev = dfdv(f, *ev, v - step, n_tangent, n_c1, n_c2, step);
+    int n_itters = 0;
+    while (std::abs(grad) > 1e-3 && n_itters < 100000){
+        double grad_diff = grad - grad_prev;
+        v -= grad * step / grad_diff;
+        grad_prev = grad;
+        grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+        n_itters++;
+    }
+
+    if (n_itters >= 10000){
+        std::cout<<"!! Secant method did not converge !! ev = "<<ev->get_count()<<std::endl;
+        return 0.;
+    }
+    return v;
+
 }
 
 

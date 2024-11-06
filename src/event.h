@@ -15,12 +15,16 @@
 #include "line.h"
 #include "circle.h"
 
+// a constant scale factor to make TDCs not overlap during minimsation
+const int SCALE {2000};
+
 class event {
 protected:
     // an event contains 8 hits
     hit hits[8];
     double v_best;
     int best_tangent;
+    double theta_best;
 
     // Event counter
     static int count;
@@ -55,10 +59,11 @@ public:
 
     double get_v_best() const { return v_best; }
     int get_count() const { return count; }
+    int get_best_tangent() const { return best_tangent; }
 };
 
 
-void conv_hit_to_coords(hit h, double &x, double &y);
+//void conv_hit_to_coords(hit h, double &x, double &y);
 
 #endif // EVENT_H
 // end event.h

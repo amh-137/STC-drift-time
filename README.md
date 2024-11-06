@@ -8,6 +8,7 @@ or
 ``` g++ ... ```
 
 ## Build LaTeX
+``` source build-TeX.sh ```
 
 
 ## Temp (Ideas)
