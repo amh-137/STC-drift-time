@@ -32,6 +32,9 @@ void vprint(std::vector<T> v) {
 
 int main(){
     
+    // from arguments later
+    int plot_frequency = 1000000000;
+
     std::ifstream file;
     int stat = open_file("data/onetrack.raw", file);
     if (stat != 0){
@@ -58,7 +61,7 @@ int main(){
 
 
     TFile *f = new TFile("data/v.root", "RECREATE");
-    TH1F *h = new TH1F("v", "Distribution of v", 50, 0., 10.);
+    TH1F *h = new TH1F("v", "Distribution of v", 250, 3., 7.);
 
     double v_best_arr[10000]; // 100 events for now for small samples while its still slow.
 
@@ -66,7 +69,7 @@ int main(){
     for (int i = 0; i < 1000000; i++) {
         read_event(file, i, ev2);
         ev2.geometry();
-        if (!(i % 100000000)) {
+        if (!(i % plot_frequency)) {
             ev2.plot();
         }
         v_best_arr[i%10000] = std::abs(ev2.get_v_best());

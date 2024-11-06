@@ -126,6 +126,29 @@ double minimise(double (*f)(const event&, double, int, int, int), const event* e
 }
 
 
+double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init){
+    // secant method
+    double v = v_init;
+    double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+    double grad_prev = dfdv(f, *ev, v - step, n_tangent, n_c1, n_c2, step);
+    int n_itters = 0;
+    while (std::abs(grad) > 1e-3 && n_itters < 100000){
+        double grad_diff = grad - grad_prev;
+        v -= grad * step / grad_diff;
+        grad_prev = grad;
+        grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
+        n_itters++;
+    }
+
+    if (n_itters >= 10000){
+        std::cout<<"!! Secant method did not converge !! ev = "<<ev->get_count()<<std::endl;
+    }
+    return v;
+
+}
+
+
+
 
 /* CLASS EVENT DEFINITIONS */
 
@@ -219,7 +242,8 @@ void event::geometry(){
     double d_best = 1e16;
 
     for (int n_tangent = 0; n_tangent < 4; n_tangent++){
-        v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init);
+        //v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init);
+        v = secant_minimise(f, this, n_tangent, i, j, step, 1e-3, v_init);
         //std::cout << "Tangent " << n_tangent << " has v = " << v << std::endl;
         double d_curr = f(*this, v, n_tangent, i, j);
         if (d_curr < d_best){
@@ -282,7 +306,7 @@ void event::plot() const{
     tl->SetLineColor(kRed);
     tl->Draw("same");
     
-    std::string fname {"plots/ev-display/" + std::to_string(count) + ".png"};
+    std::string fname {"plots/ev-display/secant-" + std::to_string(count) + ".png"};
     c.SaveAs(fname.c_str());
 
     delete tl;
