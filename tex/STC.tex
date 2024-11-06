@@ -2,6 +2,9 @@
 
 \usepackage{tex/STC}
 
+\usepackage[sorting=none]{biblatex}
+\addbibresource{STC.bib}
+
 %Document
 \begin{document}
 
@@ -9,7 +12,7 @@
 \author{Alex Hergenhan\\CID: 0604432}
 \maketitle
 
-This report outlines a program written to study the drift-time relationship for gasses in the Small Prototype Test Chamber (STC) for the ALEPH Inner Tracking Chamber (ITC). The git repository for this project can be found at \url{https://github.com/amh-137/STC-drift-time}.
+This report outlines a program written to study the drift-time relationship for gasses in the Small Prototype Test Chamber (STC) for the ALEPH Inner Tracking Chamber (ITC). The git repository for this project can be found at \href{https://github.com/amh-137/STC-drift-time}{https://github.com/amh-137/STC-drift-time}.
 
 \section{Introduction}
 \label{sec:intro}
@@ -23,13 +26,13 @@ The program is structured as follows:
     \item \texttt{main.cpp} - The main file that reads the data and calls the functions.
     \item \texttt{circle.h}, \texttt{line.h}, \texttt{hit.h} - Contains the structs for storing objects
     \item \texttt{event.h}, \texttt{event.cpp} - The main event class - stores 8 hits and associated information, with event processing methods.
-    \item \texttt{event-helpers.h} , \texttt{event-helpers.cpp} - Helper functions for the event class.
+    \item \texttt{event-helpers.h}, \texttt{event-helpers.cpp} - Helper functions for the event class.
 \end{itemize}
 A \texttt{make} file is included to compile the program, or it can be compiled with the command
 \begin{verbatim}
     g++ src/main.cpp src/event.cpp src/event-helpers.cpp -o STC -std=c++17 -Wall `root-config --cflags` `root-config --libs`
 \end{verbatim}
-A seperate script, \texttt{build-TeX.sh} is included for building this document. Here we outline a pseudocode for the program:
+A separate script, \texttt{build-TeX.sh} is included for building this document. Here we outline a pseudocode for the program:
 \begin{verbatim}
     while data:
         read 16 bytes from file
@@ -41,7 +44,7 @@ A seperate script, \texttt{build-TeX.sh} is included for building this document.
     fit histograms
     return results
 \end{verbatim}
-An inital mockup of the program was written in C++, (as can be seen in early commits to the github) however it became challenging to test new ideas in C++ due to my comparitive unfamiliarity with \texttt{ROOT}. I therefore switched to Python, testing ideas, geometry, and minimisation algorithms in notebooks in the \texttt{py-test} directory. With a working implimentation, I translated with back to C++, hoping the compiled program would be faster. This was not the case with simple gradient descent, so I switched back to python to study and optimise the loss function. I moved from sum of distances to sum of squares of distances, and then to the secant method for faster minimisation. This was then translated back to C++ for the final implimentation.
+An initial mock-up of the program was written in C++, (as can be seen in early commits to the GitHub) however it became challenging to test new ideas due to my comparative unfamiliarity with \texttt{ROOT}. I therefore switched to Python, testing ideas, geometry, and minimisation algorithms in notebooks in the \texttt{py-test} directory. With a working implementation, I translated with back to C++, hoping the compiled program would be faster. This was not the case with simple gradient descent, so I switched back to python to study and optimise the loss function. I moved from sum of distances to sum of squares of distances, and then to the secant method for faster minimisation. This was then translated back to C++ for the final implementation.
 
 \section{Implimentation}
 \label{sec:implimentation}
@@ -50,14 +53,15 @@ An inital mockup of the program was written in C++, (as can be seen in early com
 
 \subsection{Reading Data}
 \label{sec:reading}
+The file is opened and 16 bytes are read as an array of \text{chars}. These are 8 bit objects - each event is 16 bits. We therefore join two chars to form a \texttt{uint\_16t}, and perform bitwise operations on this 16 bit type to extract the layer, wire, and TDC information. However, before we recast the \texttt{char} as a \texttt{uint\_16t}, we must first cast each \texttt{char} to an \texttt{unsinged char}. This prevents mix up in bit manipulation when the most significant bit is 1. Bit shifting, and bitwise logic with masks is used to extract the data from the 16 bit \texttt{uint\_16t}, and store it in a struct \text{hit}. An array of size 8 \texttt{hit} stores the data for one event.
 
 
 I utilize a minimisation algorithm with some basic geometry to find the velocities of ionisation electrons. This works as follows:
 \begin{itemize}
     \item The two largest circles by TDC time are picked $c_1$ and $c_2$.
-    \item The four tangents for these two circles are caluclated using \texttt{???}.
-    \item The sum of the squares of the distances to the other 6 circles are found (the distance to the two largest circles is zero as these are tangents).
-    \item The radii of the circles is varied by multiplying by a constant factor $v$ and the sum of the squares of the distances is recalculated.
+    \item The four tangents for these two circles are calculated using \texttt{???}.
+    \item The sum of the squares of the distances to the other 6 circles are found (the distance to the two largest circles is zero, as these are tangents).
+    \item The radii of the circles are varied by multiplying by a constant factor, $v$ and the sum of the squares of the distances is recalculated.
 \end{itemize}
 The factor $v$ is varied until the sum of the squares of the distances is minimised. This is the velocity of the ionisation electrons.
 
@@ -65,7 +69,7 @@ The factor $v$ is varied until the sum of the squares of the distances is minimi
 \label{sec:tangents}
 We define circles and lines by their equations
 \begin{equation}
-    (x - x_0)^2 + (y - y_0)^2 = r^2
+    (x - x^0_i)^2 + (y - y^0_i)^2 = r^2
     \label{eq:circle}
 \end{equation}
 \begin{equation}
@@ -74,10 +78,10 @@ We define circles and lines by their equations
 \end{equation}
 The parameters of these equations ($a$, $b$, $c$, $x_0$, $y_0$, $r$) are stored in the structs \texttt{line} and \texttt{circle}. The tangents are therefore lines with
 \begin{equation}
-    a = 
+    a = \frac{x^0_1(r_1-r_2) + y^0_1((x^0_1)^2 + (x^0_1)^2-(r_1 - r_2)^2)}{(x^0_1)^2 + (x^0_1)^2}
     b = 
     c = .
-    \label{eq:tangents}
+    \label{eq:tange/nts}
 \end{equation}
 Finally, the distance between the $i$th circle and a line is given by
 \begin{equation}
@@ -92,12 +96,12 @@ The loss function used is defined as:
     L = \sum\limits_{\substack{i=1 \\ i\neq c_1, c_2}}^{8} d_i^2
     \label{eq:loss}
 \end{equation}
-Initially, this was minimised with gradient descent \ref{app:gradient-descent}. The gradient of this function can be caluclated analytically, however we used the definition of the derivative \ref{eq:grad}. Gradient descent, however was extremely slow and so we switched to the secant method for minimisation.
+Initially, this was minimised with gradient descent (Appendix \ref{app:gradient-descent}). The gradient of this function can be calculated analytically, however we used the definition of the derivative (\autoref{eq:grad}). Gradient descent, however, was extremely slow, so we switched to the secant method for minimisation.
 \begin{equation}
     \frac{df}{dv} = \frac{f(v + \delta v) - f(v)}{\delta v}.
     \label{eq:grad}
 \end{equation}
-The secant method is a minimisation algorithm that uses the secant line find the approximate minima of a function $f(x)$ \cite{??}. The secant line is defined as
+The secant method is a minimisation algorithm that uses the secant line to find the approximate minima of a function $f(x)$ \cite{circle-tangents}. The secant line is defined as
 
 
 
@@ -105,13 +109,25 @@ The secant method is a minimisation algorithm that uses the secant line find the
 \section{Results}
 \label{sec:results}
 
+
+\section{Conclusion}
+\label{sec:conclusion}
+My results
+
+I acknowledge that the program written has a far worse performance than others more geometric solutions. However, I did not want to just "copy" the best solution found - I built this solution myself, with minimal input from others. Getting to write and implement a minimisation of a function is something I have wanted to do for a while - I usually just use a library - so I stuck with this method for as long as possible. I am therefore pleased with my results, although I understand that the results will be worse than other students. I am particularly happy with the performance increases I achieved through optimisation of the minimisation procedure.
+
+To improve the results and performance, I would switch to the method that involves finding the intersection points of the tangents of $N$ circles, and fitting a line to these points with simple linear regression. By repeating this linear regression and removing outliers, the path of the particle can be found, and hence the velocity can be found. To improve my method, I would try to calculate an analytic solution for the derivative, or use multi-threading to increase performance, which would allow for minimisations with a greater search depth.
+
 \section{Acknowledgements}
 \label{sec:acknowledgements}
-Thanks to Calvin Dyson for his reccomendation of the secant method for minimisation. Thanks to Dr Beuselinck for the fantastic and engaging project - it has certainly led to a fantastic amount of discussion and intruigment withing the PG $1^{st}$ year group.
+Thanks to Calvin Dyson for his recommendation of the secant method for minimisation. Thanks to Dr Beuselinck for the fantastic and engaging project - it has certainly led to a fantastic amount of discussion and fascination within the PG $1^{st}$ year group.
 
+
+\printbibliography
 
 \appendix
-\section{Gradient Descent}
+\section{Appendix}
+\subsection{Gradient Descent}
 \label{app:gradient-descent}
 \begin{equation}
     v_{j+1} = v_j - \eta \frac{df}{dv}\Bigr|_{v_j}
