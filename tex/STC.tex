@@ -31,7 +31,7 @@ A separate script, \texttt{setup.sh} is included for building the folder structu
     $ make      # or g++ ....
     $ ./STC
 \end{verbatim}
-Aternitively, you can use the zipped file I emailed, but please still move the data to \texttt{data/}. All C++ code is in the \texttt{src/} folder. I have left the \texttt{tex/} and \texttt{py-tests/} folders, but none of my final results are from python scripts. The program does not utilise any python, only C++, these where just for testing (and writing this report).
+Aternitively, you can use the zipped file I emailed, but please still move the data to \texttt{data/}. All C++ code is in the \texttt{src/} folder. I have left the \texttt{tex/} and \texttt{py-tests/}folders in the git repository, but none of my final results are from python scripts. The program does not utilise any python, only C++, these where just for testing (and writing this report).
 
 \section{Program Structure \& Design}
 \label{sec:program}
@@ -56,7 +56,7 @@ I outline a pseudocode for the program:
     fit histograms
     return results
 \end{verbatim}
-An initial mock-up of the program was written in C++, (as can be seen in early commits to the GitHub) however it became challenging to test new ideas due to my comparative unfamiliarity with \texttt{ROOT}. I therefore switched to Python, testing ideas, geometry, and minimisation algorithms in notebooks in the \texttt{py-test} directory. With a working implementation, I translated with back to C++, hoping the compiled program would be faster. This was not the case with simple gradient descent, so I switched back to python to study and optimise the loss function. I moved from sum of distances to sum of squares of distances, and then to the secant method for faster minimisation. This was then translated back to C++ for the final implementation.
+An initial mock-up of the program was written in C++, (as can be seen in early commits to the GitHub) however it became challenging to test new ideas due to my comparative unfamiliarity with \texttt{ROOT}. I therefore switched to Python, testing ideas, geometry, and minimisation algorithms in notebooks in the \texttt{py-test} directory. With a working implementation, I rewrote this in C++, improving the structure and hoping the compiled program would be faster. This was not the case with simple gradient descent, so I switched back to python to study and optimise the loss function. I moved from sum of distances to sum of squares of distances (Appendix \ref{app:loss-function}), and then to the secant method for faster minimisation. This was then translated back to C++ for the final implementation.
 
 \section{Implimentation}
 \label{sec:implimentation}
@@ -65,12 +65,12 @@ An initial mock-up of the program was written in C++, (as can be seen in early c
 
 \subsection{Reading Data}
 \label{sec:reading}
-The file is opened and 16 bytes are read as an array of \text{chars}. These are 8 bit objects - each event is 16 bits. I therefore join two chars to form a \texttt{uint\_16t}, and perform bitwise operations on this 16 bit type to extract the layer, wire, and TDC information. However, before I recast the \texttt{char} as a \texttt{uint\_16t}, I must first cast each \texttt{char} to an \texttt{unsinged char}. This prevents mix up in bit manipulation when the most significant bit is 1. Bit shifting, and bitwise logic with masks is used to extract the data from the 16 bit \texttt{uint\_16t}, and store it in a struct \text{hit}. An array of size 8 \texttt{hit} stores the data for one event.\\
+The file is opened and 16 bytes are read as an array of \texttt{chars} - which are 8 bit objects. Each event is 16 bits. I therefore join two chars to form a \texttt{uint\_16t}, and perform bitwise operations on this 16 bit type to extract the layer, wire, and TDC information. However, before I recast the \texttt{char} as a \texttt{uint\_16t}, I must first cast each \texttt{char} to an \texttt{unsinged char}. This prevents mix up in bit manipulation when the most significant bit is 1. Bit shifting, and bitwise logic with masks is used to extract the data from the 16 bit \texttt{uint\_16t}, and store it in a struct \text{hit}. An array of size 8 \texttt{hit} stores the data for one event.\\
 
 
 I utilize a minimisation algorithm with some basic geometry to find the velocities of ionisation electrons. This works as follows:
 \begin{itemize}
-    \item The two largest circles by TDC time are picked $c_1$ and $c_2$.
+    \item The two largest circles by TDC time are picked ($c_1$ and $c_2$).
     \item The four tangents for these two circles are calculated using \texttt{get\_two\_circle\_tangent()}.
     \item The sum of the squares of the distances to the other 6 circles are found (the distance to the two largest circles is zero, as these are tangents).
     \item The radii of the circles are varied by multiplying by a constant factor, $v$ and the sum of the squares of the distances is recalculated.
@@ -119,7 +119,7 @@ Here, $x_k$ is our variable at step $k$, while $f(x_k)$ is the function I want t
     v_{k+1} = v_k - \frac{f'(v_k)}{f'(v_k) - f'(v_{k-1})}(v_k - v_{k-1}).
 \end{equation}
 
-While the program is running, arrays of doubles store the values of $v$ and $\theta$. To reduce memory usage, these arrays are of a fixed size $10^4$. Therefore, every $10^4$ events, the histograms for $v$ and $\theta$ are filled, and the array is reused for the next batch of events.
+While the program is running, arrays of doubles store the values of $v$ and $\theta$. To reduce memory usage, these arrays are of a fixed size $10^4$. Therefore, every $10^4$ events, the histograms for $v$ and $\theta$ are filled, and the array is reused for the next batch of events. Finally, the histograms are written to the disk, and analysis is performed using \texttt{ROOT}.
 
 \section{Results}
 \label{sec:results}
@@ -127,7 +127,7 @@ The program runs in $\approx 1$ minuite on my laptop. A fitted histogram for vel
 \begin{verbatim}
     $ ./STC 100000
 \end{verbatim}
-will draw every $100000^\text{th}$ event. By default, the program does not draw any events. The outputs are stored in \texttt{plots/ev-display/} and \autoref{fig:ev-display} shows an example. I also found the values for the file \text{onetrack.raw}, these are listed in \autoref{tab:results}.
+will draw every $100000^\text{th}$ event. By default, the program does not draw any events. The outputs are stored in \texttt{plots/ev-display/} and \autoref{fig:ev-display} shows an example. I also found the values for the file \texttt{onetrack.raw}, these are listed in \autoref{tab:results}.
 
 \begin{figure}
 \begin{subfigure}[h]{0.49\linewidth}
@@ -172,7 +172,7 @@ will draw every $100000^\text{th}$ event. By default, the program does not draw 
 \label{sec:conclusion}
 My results are outlined in \autoref{tab:results}. In general, the algorithm suffers from poor performance, with a large $\sigma_v$.  However, only 313 events do not find some sort of minima, which is fantastic. A stricter tolerance on the gradient and larger number of max steps could reduce this spread, however more events would not minimise, and the program run time increases drastically. The $\chi^2_\text{reduced}$ on both fits is poor, particularly the angular fit.\\
 
-I acknowledge that the program written has a worse performance than others geometric + linear regression solutions. However, I did not want to just "copy" the best solution found - I built this solution myself, with minimal input from others. Getting to write and implement a minimisation of a function is something I have wanted to do for a while - I usually just use a library - so I stuck with this method for as long as possible. I am therefore pleased with my results, although I understand that the results will be worse than other students. I am particularly happy with the performance increases I achieved through optimisation of the minimisation procedure.\\
+I acknowledge that the program written has a worse performance than others geometric + linear regression solutions. However, I wanted to develop my own solution. Getting to write and implement a minimisation of a function is something I have wanted to do for a while - I usually just use a library - so I stuck with this method for as long as possible. I am therefore pleased with my results, although I understand that the results will be worse than other students. I am particularly happy with the performance increases I achieved through optimisation of the minimisation procedure.\\
 
 To improve the results and performance, I would switch to the method that involves finding the intersection points of the tangents of $N$ circles, and fitting a line to these points with simple linear regression. By repeating this linear regression and removing outliers, the path of the particle can be found, and hence the velocity can be found. To improve the minimisation method, I would try to calculate an analytic solution for the derivative, or use multi-threading to increase performance, which would allow for minimisations with a greater search depth.
 
@@ -197,5 +197,15 @@ Gradient descent iterates \autoref{eq:iter}, with a "step size" $\eta$, until th
     v_{j+1} = v_j - \eta \frac{df}{dv}\Bigr|_{v_j}
     \label{eq:iter}
 \end{equation}
+
+\subsection{Choosing a Loss Function}
+\label{app:loss-function}
+I tried multiple different loss functions to see if I could increase the performance (speed and solution). These are outlined in \autoref{fig:loss-f} (next page).
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{tex/loss_functions_f.png}
+    \caption{Tests of different loss functions for a difficult event (event 701). Clearly the loss function "square" (sum then square, \autoref{eq:loss}) is the ideal solution. This was drawn in Python.}
+    \label{fig:loss-f}
+\end{figure}
 
 \end{document}
