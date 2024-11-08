@@ -5,9 +5,23 @@ All c++ code is located in `src/`, `py-test/` contains Jupyter notebooks and pyt
 
 ## Build C++
 Preferred:
-```make```
+```
+$ make
+```
 or alternately
-``` g++ src/main.cpp src/event.cpp src/event-helpers.cpp -o STC -std=c++17 -Wall `root-config --cflags` `root-config --libs` ```
+``` 
+$ g++ src/main.cpp src/event.cpp src/event-helpers.cpp -o STC -std=c++17 -Wall `root-config --cflags` `root-config --libs`
+```
+
+## Running
+``` 
+$ ./STC
+```
+or
+```
+$ ./STC 100000      # plot every 100k events with an event display
+```
 
 ## Build LaTeX
 ``` source build-TeX.sh ```
+
