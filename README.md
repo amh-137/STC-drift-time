@@ -3,6 +3,13 @@ Finding the velocity of the drift electrons in the STC for the ALEPH experiment.
 
 All c++ code is located in `src/`, `py-test/` contains Jupyter notebooks and python code that I used for testing ideas. No plots here where used in my final results, all of these came from the c++ code.
 
+## Setup
+To ensure the correct folder structure, please run
+```
+$ source setup.sh
+```
+once before building the project.
+
 ## Build C++
 Preferred:
 ```
