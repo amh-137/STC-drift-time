@@ -103,8 +103,10 @@ int main(int argc, char *argv[]){
     h2->Fit("gaus_theta");
 
     // print the results
-    std::cout << "Fit Velocity: " << fit_v->GetParameter(1) << " +/- " << fit_v->GetParError(1) << std::endl;
-    std::cout << "Fit Angle: " << fit_theta->GetParameter(1) << " +/- " << fit_theta->GetParError(1) << std::endl;
+    std::cout << "Fit Velocity mu: " << fit_v->GetParameter(1) << " +/- " << fit_v->GetParError(1) << std::endl;
+    std::cout << "Fit Velocity sigma" << fit_v->GetParameter(2) << " +/- " << fit_v->GetParError(2) << std::endl;
+    std::cout << "Fit Angle mu: " << fit_theta->GetParameter(1) << " +/- " << fit_theta->GetParError(1) << std::endl;
+    std::cout << "Fit Angle sigma: " << fit_theta->GetParameter(2) << " +/- " << fit_theta->GetParError(2) << std::endl;
 
     // draw these fits on the histogram
     TCanvas *c = new TCanvas("c", "c", 800, 600);
