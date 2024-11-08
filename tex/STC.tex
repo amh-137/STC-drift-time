@@ -65,7 +65,7 @@ An initial mock-up of the program was written in C++, (as can be seen in early c
 
 \subsection{Reading Data}
 \label{sec:reading}
-The file is opened and 16 bytes are read as an array of \text{chars}. These are 8 bit objects - each event is 16 bits. We therefore join two chars to form a \texttt{uint\_16t}, and perform bitwise operations on this 16 bit type to extract the layer, wire, and TDC information. However, before we recast the \texttt{char} as a \texttt{uint\_16t}, we must first cast each \texttt{char} to an \texttt{unsinged char}. This prevents mix up in bit manipulation when the most significant bit is 1. Bit shifting, and bitwise logic with masks is used to extract the data from the 16 bit \texttt{uint\_16t}, and store it in a struct \text{hit}. An array of size 8 \texttt{hit} stores the data for one event.\\
+The file is opened and 16 bytes are read as an array of \text{chars}. These are 8 bit objects - each event is 16 bits. I therefore join two chars to form a \texttt{uint\_16t}, and perform bitwise operations on this 16 bit type to extract the layer, wire, and TDC information. However, before I recast the \texttt{char} as a \texttt{uint\_16t}, I must first cast each \texttt{char} to an \texttt{unsinged char}. This prevents mix up in bit manipulation when the most significant bit is 1. Bit shifting, and bitwise logic with masks is used to extract the data from the 16 bit \texttt{uint\_16t}, and store it in a struct \text{hit}. An array of size 8 \texttt{hit} stores the data for one event.\\
 
 
 I utilize a minimisation algorithm with some basic geometry to find the velocities of ionisation electrons. This works as follows:
@@ -79,7 +79,7 @@ The factor $v$ is varied until the sum of the squares of the distances is minimi
 
 \subsection{Tangents \& Circle - Line Distances}
 \label{sec:tangents}
-We define circles and lines by their equations
+I define circles and lines by their equations
 \begin{equation}
     (x - x^0_i)^2 + (y - y^0_i)^2 = r^2
     \label{eq:circle}
@@ -104,17 +104,17 @@ where $\Delta x^0 = x^0_2 - x^0_1$, $\Delta y^0 = x^0_2 - y^0_1$, $\Delta r=r_2 
 
 \subsection{Minimisation}
 \label{sec:minimisation}
-The function we minimise is defined as
+The function I minimise is defined as
 \begin{equation}
     L = \sum\limits_{\substack{i=1 \\ i\neq c_1, c_2}}^{8} d_i^2.
     \label{eq:loss}
 \end{equation}
-Initially, this was minimised with gradient descent (Appendix \ref{app:gradient-descent}). Gradient descent, however, was extremely slow, so we switched to the secant method for minimisation. The secant method is an algorithm that uses the secant line to find the root of a function $f(x)$ \cite{secant-history}. It is defined as 
+Initially, this was minimised with gradient descent (Appendix \ref{app:gradient-descent}). Gradient descent, however, was extremely slow, so I switched to the secant method for minimisation. The secant method is an algorithm that uses the secant line to find the root of a function $f(x)$ \cite{secant-history}. It is defined as 
 \begin{equation}
     x_{k+1} = x_k - \frac{x_k - x_{k-1}}{f(x_k)-f(x_{k-1})} f(x_k).
     \label{eq:secant}
 \end{equation}
-Here, $x_k$ is our variable at step $k$, while $f(x_k)$ is the function we want to find the root of at step $k$. In this program, we use a modified verion of the secant function replaces $f(x_k)$ with $f'(x_k)$ (the derivative of $f(x)$). This modifies the secant method to a minimsation algorithm, instead of a root finding algorithm \cite{secant-minimsation}. This is implimented in the function \texttt{secant\_minimise()} as
+Here, $x_k$ is our variable at step $k$, while $f(x_k)$ is the function I want to find the root of at step $k$. In this program, I use a modified verion of the secant function replaces $f(x_k)$ with $f'(x_k)$ (the derivative of $f(x)$). This modifies the secant method to a minimsation algorithm, instead of a root finding algorithm \cite{secant-minimsation}. This is implimented in the function \texttt{secant\_minimise()} as
 \begin{equation}
     v_{k+1} = v_k - \frac{f'(v_k)}{f'(v_k) - f'(v_{k-1})}(v_k - v_{k-1}).
 \end{equation}
@@ -123,19 +123,58 @@ While the program is running, arrays of doubles store the values of $v$ and $\th
 
 \section{Results}
 \label{sec:results}
-The program runs in $\approx 1$ minuite on my laptop. A fitted histogram for velocity \autoref{fig:vel} and angle \autoref{fig:angle} are produced. The program can also draw fitted events. This is done by passing the draw frequency as a parameter when running the program e.g
+The program runs in $\approx 1$ minuite on my laptop. A fitted histogram for velocity (\autoref{fig:velocity-fit}) and angle (\autoref{fig:angle-fit}) are produced. The program can also draw fitted events. This is done by passing the draw frequency as a parameter when running the program e.g
 \begin{verbatim}
     $ ./STC 100000
 \end{verbatim}
-will draw every $100000^\text{th}$ event. By default, the program does not draw any events. The outputs are stored in \texttt{plots/ev-display/} and \autoref{fig:ev-display} shows an example.
+will draw every $100000^\text{th}$ event. By default, the program does not draw any events. The outputs are stored in \texttt{plots/ev-display/} and \autoref{fig:ev-display} shows an example. I also found the values for the file \text{onetrack.raw}, these are listed in \autoref{tab:results}.
+
+\begin{figure}
+\begin{subfigure}[h]{0.49\linewidth}
+    \centering
+    \includegraphics[width=1.0\linewidth]{tex/secant-10004.png}
+\end{subfigure}
+\begin{subfigure}[h]{0.49\linewidth}
+    \centering
+    \includegraphics[width=1.0\linewidth]{tex/secant-300004.png}
+\end{subfigure}
+    \caption{(Left) display of event 10000. (Right) display of event 300000.}
+\label{fig:ev-display}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{tex/velocity_fit.png}
+    \caption{Fit of the velocity bins. This fit has parameters $\mu=55.30 \pm 0.01 \mu$m/ns  and $\sigma= 8.26 \pm 0.01 \mu$m/ns with a $\chi^2_\text{reduced}=342$.}
+    \label{fig:velocity-fit}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{tex/angle_fit.png}
+    \caption{Fit of the angle bins. This fit has parameters $\mu = 5.323^{\circ} \pm 0.017^{\circ}$ and $\sigma= 13.264^{\circ} \pm 0.006^{\circ} $ with a $\chi^2_\text{reduced}=9657$!}
+    \label{fig:angle-fit}
+\end{figure}
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|c|c|c|c}
+         & $\mu_v$ [$\mu$m/ns] & $\sigma_v$ [$\mu$m/ns] & $\mu_\theta$ & $\sigma_\theta$ \\
+         \hline
+        \texttt{onetrack.raw} & $45.267$ & N/A & $10.1^\circ$ & N/A \\
+        \texttt{manytracks.raw} & $55.30 \pm 0.01$ & $8.26 \pm 0.01$ & $5.323^{\circ} \pm 0.017^{\circ}$ & $13.264^{\circ} \pm 0.006^{\circ}$
+    \end{tabular}
+    \caption{Table showing my results for both files.}
+    \label{tab:results}
+\end{table}
 
 \section{Conclusion}
 \label{sec:conclusion}
-My results
+My results are outlined in \autoref{tab:results}. In general, the algorithm suffers from poor performance, with a large $\sigma_v$.  However, only 313 events do not find some sort of minima, which is fantastic. A stricter tolerance on the gradient and larger number of max steps could reduce this spread, however more events would not minimise, and the program run time increases drastically. The $\chi^2_\text{reduced}$ on both fits is poor, particularly the angular fit.\\
 
-I acknowledge that the program written has a far worse performance than others more geometric solutions. However, I did not want to just "copy" the best solution found - I built this solution myself, with minimal input from others. Getting to write and implement a minimisation of a function is something I have wanted to do for a while - I usually just use a library - so I stuck with this method for as long as possible. I am therefore pleased with my results, although I understand that the results will be worse than other students. I am particularly happy with the performance increases I achieved through optimisation of the minimisation procedure.
+I acknowledge that the program written has a worse performance than others geometric + linear regression solutions. However, I did not want to just "copy" the best solution found - I built this solution myself, with minimal input from others. Getting to write and implement a minimisation of a function is something I have wanted to do for a while - I usually just use a library - so I stuck with this method for as long as possible. I am therefore pleased with my results, although I understand that the results will be worse than other students. I am particularly happy with the performance increases I achieved through optimisation of the minimisation procedure.\\
 
-To improve the results and performance, I would switch to the method that involves finding the intersection points of the tangents of $N$ circles, and fitting a line to these points with simple linear regression. By repeating this linear regression and removing outliers, the path of the particle can be found, and hence the velocity can be found. To improve my method, I would try to calculate an analytic solution for the derivative, or use multi-threading to increase performance, which would allow for minimisations with a greater search depth.
+To improve the results and performance, I would switch to the method that involves finding the intersection points of the tangents of $N$ circles, and fitting a line to these points with simple linear regression. By repeating this linear regression and removing outliers, the path of the particle can be found, and hence the velocity can be found. To improve the minimisation method, I would try to calculate an analytic solution for the derivative, or use multi-threading to increase performance, which would allow for minimisations with a greater search depth.
 
 \section{Acknowledgements}
 \label{sec:acknowledgements}
@@ -148,7 +187,7 @@ Thanks to Calvin Dyson for his recommendation of the secant method for minimisat
 \section{Appendix}
 \subsection{Gradient Descent}
 \label{app:gradient-descent}
-The gradient of function \autoref{eq:loss} can be calculated analytically, however we used the definition of the derivative (\autoref{eq:grad}).
+The gradient of function \autoref{eq:loss} can be calculated analytically, however I used the definition of the derivative (\autoref{eq:grad}).
 \begin{equation}
     \frac{df}{dv} = \frac{f(v + \delta v) - f(v)}{\delta v}.
     \label{eq:grad}
