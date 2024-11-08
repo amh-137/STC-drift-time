@@ -31,7 +31,7 @@ A separate script, \texttt{setup.sh} is included for building the folder structu
     $ make      # or g++ ....
     $ ./STC
 \end{verbatim}
-Aternitively, you can use the zipped file I emailed, but please still run \texttt{setup.sh} to build the folder structure, and move the data to \texttt{data/}. All C++ code is in the \texttt{src/} folder. I have left the \texttt{tex/} and \texttt{py-tests/} folders, but none of my final results are from python scripts. The program does not utilise any python, only C++, these where just for testing (and writing this report).
+Aternitively, you can use the zipped file I emailed, but please still move the data to \texttt{data/}. All C++ code is in the \texttt{src/} folder. I have left the \texttt{tex/} and \texttt{py-tests/} folders, but none of my final results are from python scripts. The program does not utilise any python, only C++, these where just for testing (and writing this report).
 
 \section{Program Structure \& Design}
 \label{sec:program}
@@ -123,7 +123,11 @@ While the program is running, arrays of doubles store the values of $v$ and $\th
 
 \section{Results}
 \label{sec:results}
-
+The program runs in $\approx 1$ minuite on my laptop. A fitted histogram for velocity \autoref{fig:vel} and angle \autoref{fig:angle} are produced. The program can also draw fitted events. This is done by passing the draw frequency as a parameter when running the program e.g
+\begin{verbatim}
+    $ ./STC 100000
+\end{verbatim}
+will draw every $100000^\text{th}$ event. By default, the program does not draw any events. The outputs are stored in \texttt{plots/ev-display/} and \autoref{fig:ev-display} shows an example.
 
 \section{Conclusion}
 \label{sec:conclusion}
