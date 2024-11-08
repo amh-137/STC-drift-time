@@ -16,11 +16,11 @@
 # include "event-helpers.h"
 
 /* CLASS DEPENDANT HELPER FUNCTIONS DEFINTIONS*/
-// for other, non class-dependant helper functions, see event-helpers.cpp
+// for other, non class-dependant helper functions, see event-helpers.cpp & event-helpers.h
 double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2);
 double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, double v, int n_tangent, int n_c1, int n_c2, double step);
 double minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double lbound, double ubound, double v_init);
-double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init);
+double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init, int& n_evt_failed);
 
 
 /* CLASS EVENT DEFINITIONS */
@@ -107,7 +107,7 @@ void event::get_two_largest_circles(int& i, int& j) const {
 }
 
 
-void event::geometry(){
+void event::geometry(int& n_evt_failed){
     // get the largest circles
     int i, j;
     get_two_largest_circles(i, j);
@@ -120,8 +120,8 @@ void event::geometry(){
     double d_best = 1e16;
 
     for (int n_tangent = 0; n_tangent < 4; n_tangent++){
-        //v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init);
-        v = secant_minimise(f, this, n_tangent, i, j, step, 1e-3, v_init);
+        //v = minimise(f, this, n_tangent, i, j, step, lbound, ubound, v_init); // slower method.
+        v = secant_minimise(f, this, n_tangent, i, j, step, 1e-3, v_init, n_evt_failed);
         double d_curr = f(*this, v, n_tangent, i, j);
         if (d_curr < d_best){
             v_best = v;
@@ -198,6 +198,14 @@ void event::plot() const{
 /* CLASS EVENT DEPENDANT HELPER FUNCTIONS */
 // see event-helpers.cpp for the non class-dependent functions
 
+
+/** @brief
+ *  function to be minimised
+ * @param v: velocity of particle
+ * @param n_tangent: number of tangent line (0-3)
+ * @param n_c1: number of largest circle (0-7)
+ * @param n_c2: number of second largest circle (0-7)
+**/
 double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2){
     // setup circles with TDC scaled by v
     double x0, y0, x1, y1, x2, y2;
@@ -231,7 +239,7 @@ double f(const event& ev, double v, int n_tangent, int n_c1, int n_c2){
 
 
 double dfdv(double (*f)(const event&, double, int, int, int), const event& ev, double v, int n_tangent, int n_c1, int n_c2, double step){
-    // f(x + h) - f(x - h) / 2h
+    // f(x + h) - f(x) / h
     return (f(ev, v + step, n_tangent, n_c1, n_c2) - f(ev, v, n_tangent, n_c1, n_c2)) / (step);
 }
 
@@ -251,13 +259,14 @@ double minimise(double (*f)(const event&, double, int, int, int), const event* e
 }
 
 
-double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init){
+double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init, int& n_evt_failed){
     // secant method for minimsation https://www.sciencedirect.com/science/article/pii/S0096300306002530
     double v = v_init;
     double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
     double grad_prev = dfdv(f, *ev, v - step, n_tangent, n_c1, n_c2, step);
     int n_itters = 0;
-    while (std::abs(grad) > 1e-3 && n_itters < 100000){
+    int max_itters = 100000;
+    while (std::abs(grad) > 1e-3 && n_itters < max_itters){
         double grad_diff = grad - grad_prev;
         v -= grad * step / grad_diff;
         grad_prev = grad;
@@ -265,8 +274,9 @@ double secant_minimise(double (*f)(const event&, double, int, int, int), const e
         n_itters++;
     }
 
-    if (n_itters >= 10000){
+    if (n_itters >= max_itters){
         //std::cout<<"!! Secant method did not converge !! ev = "<<ev->get_count()<<std::endl;
+        n_evt_failed++;
         return 0.;
     }
     return v;
