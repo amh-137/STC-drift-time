@@ -252,7 +252,7 @@ double minimise(double (*f)(const event&, double, int, int, int), const event* e
 
 
 double secant_minimise(double (*f)(const event&, double, int, int, int), const event* ev, int n_tangent, int n_c1, int n_c2, double step, double tol, double v_init){
-    // secant method
+    // secant method for minimsation https://www.sciencedirect.com/science/article/pii/S0096300306002530
     double v = v_init;
     double grad = dfdv(f, *ev, v, n_tangent, n_c1, n_c2, step);
     double grad_prev = dfdv(f, *ev, v - step, n_tangent, n_c1, n_c2, step);
@@ -266,7 +266,7 @@ double secant_minimise(double (*f)(const event&, double, int, int, int), const e
     }
 
     if (n_itters >= 10000){
-        std::cout<<"!! Secant method did not converge !! ev = "<<ev->get_count()<<std::endl;
+        //std::cout<<"!! Secant method did not converge !! ev = "<<ev->get_count()<<std::endl;
         return 0.;
     }
     return v;

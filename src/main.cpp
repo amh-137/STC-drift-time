@@ -106,7 +106,7 @@ int main(){
     fit_theta->Draw("same");
     c2->SaveAs("plots/angle_fit.png");
 
-
+    std::cout<<"Number of events that did not minimise: "<<h2->GetBinContent(31)<<std::endl;
 
 
     f->Close();
